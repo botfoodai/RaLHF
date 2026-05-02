@@ -4,7 +4,7 @@
 
 Built by [Bot Food](https://botfood.ai) on the [RaLHF](https://ralhf.ai) MCP server.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-backend.ralhf.ai-green.svg)](https://backend.ralhf.ai/mcp)
 

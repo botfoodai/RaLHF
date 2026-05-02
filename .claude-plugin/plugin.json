@@ -1,7 +1,7 @@
 {
   "name": "ralhf",
-  "version": "1.0.0",
-  "description": "Turns Claude into your personal context engineer — assembles relevant context from your RaLHF wiki, memory, files, and connected apps before every task.",
+  "version": "1.0.1",
+  "description": "Turns Claude into your personal context engineer \u2014 assembles relevant context from your RaLHF wiki, memory, files, and connected apps before every task.",
   "author": {
     "name": "Bot Food Corporation"
   },
