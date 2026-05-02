@@ -39,7 +39,22 @@ See [`PHASES.md`](./PHASES.md) for the orientation map and [`skills/ralhf/SKILL.
 
 ## Installation
 
-RaLHF is a Claude Code plugin. Drop the folder into your plugins directory and Claude Code will auto-discover the manifest, skills, hooks, and MCP server config.
+**Recommended (one line):**
+
+```bash
+curl -fsSL install.ralhf.ai | bash
+```
+
+**Or, in Claude Code directly:**
+
+```
+/plugin marketplace add botfoodai/RaLHF-plugins
+/plugin install ralhf
+```
+
+**Or, manual install from this repo:**
+
+Clone the repo, then in Claude Code: `/plugin install <path-to-this-folder>`. Claude Code will auto-discover the manifest, skills, hooks, and MCP server config.
 
 **Requirements:**
 - A [RaLHF account](https://ralhf.ai) — the plugin points at `https://backend.ralhf.ai/mcp`
