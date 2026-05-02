@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ralhf-mcp": {
+      "type": "http",
+      "url": "https://backend.ralhf.ai/mcp"
+    }
+  }
+}

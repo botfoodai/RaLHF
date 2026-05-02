@@ -1,0 +1,16 @@
+{
+  "name": "ralhf",
+  "version": "2.4.3",
+  "description": "RaLHF — turns Claude into your personal context engineer. Before any task, RaLHF collaborates with you to assemble a context package from your RaLHF wiki, Claude's memory, local files, and connected apps. Five-phase flow (Load → Discover → Propose → Confirm → Execute → Remember) with staged check-ins, verified-present connector inventory, and structured feedback capture. Points at backend.ralhf.ai.",
+  "author": {
+    "name": "Bot Food Corporation"
+  },
+  "keywords": [
+    "ralhf",
+    "personalization",
+    "context",
+    "memory",
+    "ai-agent",
+    "mcp"
+  ]
+}
