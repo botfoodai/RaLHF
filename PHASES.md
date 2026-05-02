@@ -100,5 +100,5 @@ The hard gate sits at the end of Phase 3 — no execution until the user has exp
 | Gmail query templates | [`references/gmail-supplementation.md`](skills/ralhf/references/gmail-supplementation.md) |
 | MCP URL | [`.mcp.json`](.mcp.json) + `README.md` |
 | Hooks | [`hooks/hooks.json`](hooks/hooks.json) + the file the hook references |
-| Slash commands | Each lives in its own `skills/<name>/SKILL.md` (e.g., `skills/learn/SKILL.md`) — invoked by typing `/<name>`. Update `README.md` too. |
+| Slash commands | Each lives in its own `skills/<name>/SKILL.md` (e.g., `skills/learn/SKILL.md`) — invoked by typing `/ralhf:<name>` (plugin skills are namespaced). Update `README.md` too. |
 | **This file** | Only when the phase **names**, **hook list**, or **top-level shape** changes. Per-phase detail stays in SKILL.md. |
