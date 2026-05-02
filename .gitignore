@@ -1,0 +1,21 @@
+# Build output
+dist/
+build/
+*.zip
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local Claude Code settings (contains user-specific permissions)
+.claude/
