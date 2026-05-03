@@ -2,21 +2,20 @@
 #
 # build-plugin.sh — package the RaLHF plugin into a distributable zip.
 #
-# Reads the version from .claude-plugin/plugin.json, stages a clean copy
+# Reads name + version from .claude-plugin/plugin.json, stages a clean copy
 # of the plugin (excluding repo cruft like .git, .claude/, dist/, etc.),
-# and produces dist/ralhf-<version>.zip.
+# and produces dist/<name>-<version>.zip.
 #
 # Usage:
 #   ./build-plugin.sh
 #
-# The resulting zip extracts to a single top-level directory named
-# `ralhf/`, so recipients get a clean folder no matter where they unzip.
+# The resulting zip extracts to a single top-level directory named after
+# the plugin, so recipients get a clean folder no matter where they unzip.
 
 set -euo pipefail
 
 # --- locate ourselves ---------------------------------------------------------
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_NAME="ralhf"
 MANIFEST="$ROOT/.claude-plugin/plugin.json"
 DIST="$ROOT/dist"
 
@@ -33,16 +32,17 @@ for tool in zip rsync python3; do
   fi
 done
 
-# --- read version from manifest -----------------------------------------------
-VERSION=$(python3 -c "
+# --- read name + version from manifest ---------------------------------------
+read -r PLUGIN_NAME VERSION < <(python3 -c "
 import json, sys
 with open('$MANIFEST') as f:
     m = json.load(f)
+n = m.get('name')
 v = m.get('version')
-if not v:
-    print('error: plugin.json has no version field', file=sys.stderr)
+if not n or not v:
+    print('error: plugin.json missing name or version field', file=sys.stderr)
     sys.exit(1)
-print(v)
+print(n, v)
 ")
 
 ZIP_NAME="${PLUGIN_NAME}-${VERSION}.zip"
@@ -52,7 +52,7 @@ ZIP_PATH="$DIST/$ZIP_NAME"
 REQUIRED=(
   ".claude-plugin/plugin.json"
   ".mcp.json"
-  "skills/ralhf/SKILL.md"
+  "skills/prep-context/SKILL.md"
   "hooks/hooks.json"
   "LICENSE"
   "NOTICE"

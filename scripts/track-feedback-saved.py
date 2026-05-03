@@ -19,7 +19,7 @@ session_id = hook_input.get("session_id", "")
 if not session_id:
     sys.exit(0)
 
-hook_dir = os.path.join(tempfile.gettempdir(), "ralhf-hooks")
+hook_dir = os.path.join(tempfile.gettempdir(), "memoire-hooks")
 os.makedirs(hook_dir, exist_ok=True)
 marker = os.path.join(hook_dir, f"{session_id}.feedback_saved")
 open(marker, "a", encoding="utf-8").close()

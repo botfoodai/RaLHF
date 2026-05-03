@@ -1,7 +1,7 @@
 {
   "name": "ralhf",
-  "version": "1.0.1",
-  "description": "Turns Claude into your personal context engineer \u2014 assembles relevant context from your RaLHF wiki, memory, files, and connected apps before every task.",
+  "version": "2.7.0",
+  "description": "RaLHF prep-context skill — collaborates with the user to assemble a context package before Claude executes the task. Five-phase flow (Load → Discover → Propose → Confirm → Execute → Remember) with staged check-ins, verified-present connector inventory, and structured feedback capture. Production deployment — points at backend.ralhf.ai. GENERATED from plugins/ralhf-dev/ via scripts/sync-plugin-variants.py.",
   "author": {
     "name": "Bot Food Corporation"
   },

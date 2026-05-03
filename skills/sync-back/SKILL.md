@@ -9,7 +9,7 @@ The user wants to sync what was learned during this conversation back to RaLHF.
 
 ## What to do
 
-Follow the Phase 5 (Remember) protocol from the `ralhf` skill:
+Follow the Phase 5 (Remember) protocol from the `prep-context` skill:
 
 ### 1. Review the conversation
 

@@ -1,5 +1,5 @@
 ---
-name: ralhf
+name: prep-context
 description: >
   INVOKE FIRST on every user message that asks to plan, build, write,
   create, draft, fix, decide, recommend, or choose anything —

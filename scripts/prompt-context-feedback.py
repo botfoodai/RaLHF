@@ -26,7 +26,7 @@ if stop_hook_active:
 
 # Cross-platform temp dir matches what track-context-tool.py and
 # track-feedback-saved.py write to.
-hook_dir = os.path.join(tempfile.gettempdir(), "ralhf-hooks")
+hook_dir = os.path.join(tempfile.gettempdir(), "memoire-hooks")
 
 # No context tools used this session
 if not os.path.exists(os.path.join(hook_dir, f"{session_id}.context_used")):

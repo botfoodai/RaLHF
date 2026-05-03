@@ -4,7 +4,7 @@
 
 Built by [Bot Food](https://botfood.ai) on the [RaLHF](https://ralhf.ai) MCP server.
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-2.5.0-blue.svg)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-backend.ralhf.ai-green.svg)](https://backend.ralhf.ai/mcp)
 
@@ -33,7 +33,7 @@ The result: Claude's first attempt is grounded in *your* context, not a generic 
 | **4 — Execute** | Hands the assembled package to Claude with citations and scope notes. Claude opens with a handoff acknowledgment, flags thin context, and cites wiki pages in italics. |
 | **5 — Remember** | Post-task `feed-ralhf` ask captures durable facts and a structured postmortem (`save_context_feedback`) so the next session is sharper. A Stop hook backstops the feedback save. |
 
-See [`PHASES.md`](./PHASES.md) for the orientation map and [`skills/ralhf/SKILL.md`](./skills/ralhf/SKILL.md) for the canonical spec.
+See [`PHASES.md`](./PHASES.md) for the orientation map and [`skills/prep-context/SKILL.md`](./skills/prep-context/SKILL.md) for the canonical spec.
 
 ---
 
@@ -82,7 +82,6 @@ The MCP server is wired up in [`.mcp.json`](./.mcp.json):
 
 | Command | What it does |
 |---|---|
-| `/ralhf:personalize` | Manual Phase 1 — top up context mid-conversation when the topic shifts |
 | `/ralhf:learn <fact>` | Teach RaLHF something new in one step (preferences, allergies, life events, constraints) |
 | `/ralhf:sync-back` | Run Phase 5 manually with a review gate — preview what gets saved before it ships |
 | `/ralhf:feed-ralhf` | End-of-session dump — dense summary + file uploads + structured feedback. Also fires automatically via the Phase 5 post-task ask |
@@ -92,8 +91,9 @@ The MCP server is wired up in [`.mcp.json`](./.mcp.json):
 ## What's in the box
 
 ### Skills
-- **`skills/ralhf/`** — the core skill. The five-phase persona, key rules, worked examples, and references for feedback protocol, Gmail query templates, connector pattern table, and context decomposition.
-- **`skills/personalize/`**, **`skills/learn/`**, **`skills/sync-back/`**, **`skills/feed-ralhf/`** — slash-command skills that expose specific phases as one-shot actions.
+- **`skills/prep-context/`** — the core skill. The five-phase persona, key rules, worked examples, and references for feedback protocol, Gmail query templates, connector pattern table, and context decomposition.
+- **`skills/learn/`**, **`skills/sync-back/`**, **`skills/feed-ralhf/`** — slash-command skills that expose specific phases as one-shot actions.
+- **`skills/ralhf-intro/`** — first-run setup check + onboarding intro for new users.
 
 ### Hooks
 | Event | File | Job |
@@ -162,11 +162,11 @@ RaLHF/
 |---|---|
 | [`PHASES.md`](./PHASES.md) | One-page orientation map — five phases, hook infrastructure, ASCII diagram |
 | [`CLAUDE.md`](./CLAUDE.md) | Plugin-level invocation rules and exceptions |
-| [`skills/ralhf/SKILL.md`](./skills/ralhf/SKILL.md) | Full skill spec — persona, key rules, worked examples |
-| [`skills/ralhf/references/feedback-protocol.md`](./skills/ralhf/references/feedback-protocol.md) | How `save_context_feedback` is structured |
-| [`skills/ralhf/references/gmail-supplementation.md`](./skills/ralhf/references/gmail-supplementation.md) | Gmail query templates for the connector flow |
-| [`skills/ralhf/references/connector-patterns.md`](./skills/ralhf/references/connector-patterns.md) | When and how to query each connector |
-| [`skills/ralhf/references/context-decomposition.md`](./skills/ralhf/references/context-decomposition.md) | How tasks decompose into context dimensions |
+| [`skills/prep-context/SKILL.md`](./skills/prep-context/SKILL.md) | Full skill spec — persona, key rules, worked examples |
+| [`skills/prep-context/references/feedback-protocol.md`](./skills/prep-context/references/feedback-protocol.md) | How `save_context_feedback` is structured |
+| [`skills/prep-context/references/gmail-supplementation.md`](./skills/prep-context/references/gmail-supplementation.md) | Gmail query templates for the connector flow |
+| [`skills/prep-context/references/connector-patterns.md`](./skills/prep-context/references/connector-patterns.md) | When and how to query each connector |
+| [`skills/prep-context/references/context-decomposition.md`](./skills/prep-context/references/context-decomposition.md) | How tasks decompose into context dimensions |
 
 ---
 

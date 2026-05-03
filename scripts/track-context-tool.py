@@ -5,7 +5,7 @@ Cross-platform replacement for the previous bash version. Uses
 tempfile.gettempdir() so it works on Windows (%TEMP%) as well as Unix (/tmp).
 
 Hook input on stdin is JSON with at least `session_id`. On success creates
-an empty marker file at <tempdir>/ralhf-hooks/<session_id>.context_used.
+an empty marker file at <tempdir>/memoire-hooks/<session_id>.context_used.
 The Stop hook reads this marker to decide whether to gate session exit on
 save_context_feedback being called.
 """
@@ -23,7 +23,7 @@ session_id = hook_input.get("session_id", "")
 if not session_id:
     sys.exit(0)
 
-hook_dir = os.path.join(tempfile.gettempdir(), "ralhf-hooks")
+hook_dir = os.path.join(tempfile.gettempdir(), "memoire-hooks")
 os.makedirs(hook_dir, exist_ok=True)
 marker = os.path.join(hook_dir, f"{session_id}.context_used")
 # touch — create the file if it doesn't exist; do nothing if it does
