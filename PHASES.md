@@ -15,22 +15,22 @@ Current skill version: see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.
 | **2 — PROPOSE** | **Show what was found.** Up to two staged check-ins, **one CTA per message**: Turn 2a starting context (always) → Turn 2b connector flow (when any connector verified-present). | [SKILL.md → PHASE 2](skills/prep-context/SKILL.md#phase-2-propose--share-what-you-found-one-check-in-at-a-time) |
 | **3 — CONFIRM** | **Asking + finalizing.** Up to four messages: Step 3a builds the formal deep-context gap list (1–3 rich / 4–6 thin, tagged) and surfaces it as the gap pass (always) → Step 3b safety re-confirm (only when applicable) → Step 3c final pre-handoff check-in (always) → Step 3d Library refresh ask (when source-promotion queue non-empty). Hard gate sits here. | [SKILL.md → PHASE 3](skills/prep-context/SKILL.md#phase-3-confirm--gaps-safety-final-check-in-library-refresh) |
 | **4 — EXECUTE** | Handoff line → drop persona. Claude opens with handoff ack + context-scope line, flags thin context, cites wiki pages in italics, never fabricates URLs. | [SKILL.md → PHASE 4](skills/prep-context/SKILL.md#phase-4-execute) |
-| **5 — REMEMBER** | Post-task feed-ralhf ask (mandatory on wrap-up signal). Stop hook backstops `save_context_feedback` if a postmortem hasn't been recorded. | [SKILL.md → PHASE 5](skills/prep-context/SKILL.md#phase-5-remember--when-task-is-done) |
+| **5 — REMEMBER** | Post-task feed-ralhf ask (mandatory on wrap-up signal). Step 2's `save_context_feedback` is non-negotiable — if any RaLHF tools were used this session, you owe a postmortem before wrapping. | [SKILL.md → PHASE 5](skills/prep-context/SKILL.md#phase-5-remember--when-task-is-done) |
 
 The hard gate sits at the end of Phase 3 — no execution until the user has explicitly confirmed the package (Step 3c) and approved the Library refresh (Step 3d, when applicable).
 
 ---
 
-## Hook infrastructure
+## Hook infrastructure (hybrid: 3 hooks + skill-level fallback)
 
-| Hook | File | Purpose |
-|---|---|---|
-| `SessionStart` | `hooks/ralhf-init.md` | Primer loaded at session start. |
-| `UserPromptSubmit` | `hooks/user-prompt-gate.md` | Forces skill invocation on every user turn (covers casual framings: "lets X", "how about X", "I want to X"). |
-| `PreToolUse` | `hooks/pretool-askuser-block.json` | Denies `AskUserQuestion` with an "invoke the skill now" reason — keeps Claude from gathering requirements before RaLHF fires. |
-| `PostToolUse` | `scripts/track-context-tool.sh`, `scripts/track-feedback-saved.sh` | Track which context tools were used and whether feedback was saved. |
-| `Stop` | `scripts/prompt-context-feedback.sh` | Blocks session exit until `save_context_feedback` runs. |
-| `SessionEnd` | `scripts/cleanup-session.sh` | Temp file cleanup. |
+Three lightweight `cat`-based hooks ship with the plugin. They work wherever `cat` is on PATH (every Mac, every Linux, any Windows with Git Bash/WSL); on bare Windows cmd.exe they fail silently and the same enforcement falls back to skill-level rules in `CLAUDE.md` + `SKILL.md`. The Stop / PostToolUse / SessionEnd hooks from earlier versions were removed because JSON-parsing in shell scripts doesn't translate cleanly across `/bin/sh` and `cmd.exe`.
+
+| Hook | File | Purpose | Fallback if hook silently fails |
+|---|---|---|---|
+| `SessionStart` | `hooks/ralhf-init.md` | Session primer — invoke prep-context first | CLAUDE.md "Mandatory prep-context skill first" |
+| `UserPromptSubmit` | `hooks/user-prompt-gate.md` | Per-turn force-skill-invocation, casual-framing examples | CLAUDE.md + skill description frontmatter |
+| `PreToolUse` (AskUser-like matcher) | `hooks/pretool-askuser-block.json` | Deny `AskUserQuestion` | CLAUDE.md "AskUserQuestion is banned" + SKILL.md §1.2 |
+| ~~`PostToolUse` / `Stop` / `SessionEnd`~~ | — | (removed; see SKILL.md Phase 5 Step 2 for the close-out gate) | SKILL.md Phase 5 |
 
 ---
 
@@ -83,8 +83,10 @@ The hard gate sits at the end of Phase 3 — no execution until the user has exp
 ┌──────────────────────────────────────────────────────────────┐
 │ PHASE 5: REMEMBER (mandatory)                                │
 │   POST-TASK ASK: "want me to feed RaLHF? (yes/no)" →         │
-│     yes = inline feed-ralhf flow; no = skip                  │
-│   Stop hook forces save_context_feedback on exit             │
+│     yes = inline feed-ralhf flow; no = skip heavy flow       │
+│   Step 2: save_context_feedback is non-negotiable            │
+│   (skill-level discipline; the prior Stop hook was retired   │
+│    because shell-script JSON parsing wasn't portable)        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -99,6 +101,6 @@ The hard gate sits at the end of Phase 3 — no execution until the user has exp
 | Feedback / sync behavior | [`references/feedback-protocol.md`](skills/prep-context/references/feedback-protocol.md) |
 | Gmail query templates | [`references/gmail-supplementation.md`](skills/prep-context/references/gmail-supplementation.md) |
 | MCP URL | [`.mcp.json`](.mcp.json) + `README.md` |
-| Hooks | [`hooks/hooks.json`](hooks/hooks.json) + the file the hook references |
+| Hooks | [`hooks/hooks.json`](hooks/hooks.json) + the file the hook references. All commands use `cat` directly — no shim scripts. |
 | Slash commands | Each lives in its own `skills/<name>/SKILL.md` (e.g., `skills/learn/SKILL.md`) — invoked by typing `/<name>`. Update `README.md` too. |
 | **This file** | Only when the phase **names**, **hook list**, or **top-level shape** changes. Per-phase detail stays in SKILL.md. |

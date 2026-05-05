@@ -95,15 +95,17 @@ The MCP server is wired up in [`.mcp.json`](./.mcp.json):
 - **`skills/learn/`**, **`skills/sync-back/`**, **`skills/feed-ralhf/`** — slash-command skills that expose specific phases as one-shot actions.
 - **`skills/ralhf-intro/`** — first-run setup check + onboarding intro for new users.
 
-### Hooks
+### Hooks (hybrid: 3 mechanical + skill-level fallback)
+
+Three `cat`-based hooks ship with the plugin. They provide mechanical enforcement on Mac, Linux, and any Windows machine with `cat` on PATH (Git Bash, WSL); on bare Windows cmd.exe they fail silently and the same rules are enforced by skill-level guidance in `CLAUDE.md` + `SKILL.md`.
+
 | Event | File | Job |
 |---|---|---|
 | `SessionStart` | `hooks/ralhf-init.md` | Primer loaded at session start |
 | `UserPromptSubmit` | `hooks/user-prompt-gate.md` | Forces skill invocation on every turn — covers casual phrasings ("lets X", "how about Y", "I want to Z") |
 | `PreToolUse` | `hooks/pretool-askuser-block.json` | Denies `AskUserQuestion` until the skill has fired — prevents Claude from gathering requirements before context is assembled |
-| `PostToolUse` | `scripts/track-context-tool.py`, `scripts/track-feedback-saved.py` | Tracks which RaLHF tools ran and whether feedback was saved |
-| `Stop` | `scripts/prompt-context-feedback.py` | Blocks session exit until `save_context_feedback` runs |
-| `SessionEnd` | `scripts/cleanup-session.py` | Temp file cleanup |
+
+The Stop / PostToolUse / SessionEnd hooks from earlier versions were removed because they needed JSON-parsing logic that doesn't translate cleanly across `/bin/sh` and `cmd.exe`. Their job (mandate `save_context_feedback`, track tool usage) is handled by the skill itself in Phase 5.
 
 ### MCP tools (provided by the RaLHF backend)
 | Tool | Purpose |
@@ -134,10 +136,11 @@ RaLHF/
 │   ├── personalize/SKILL.md      # /ralhf:personalize — manual Phase 1 top-up
 │   ├── sync-back/SKILL.md        # /ralhf:sync-back — manual Phase 5 with review
 │   └── feed-ralhf/SKILL.md       # /ralhf:feed-ralhf — end-of-session dump
-├── hooks/                        # SessionStart, UserPromptSubmit, PreToolUse,
-│   │                             # Stop, SessionEnd
-│   └── hooks.json
-├── scripts/                      # Tool tracking + Stop-hook feedback gate
+├── hooks/                        # 3 cat-based hooks (SessionStart, UserPromptSubmit, PreToolUse).
+│   ├── hooks.json                # Fail silently on bare Windows cmd.exe — fallback in CLAUDE.md.
+│   ├── ralhf-init.md
+│   ├── user-prompt-gate.md
+│   └── pretool-askuser-block.json
 ├── CLAUDE.md                     # Plugin-level invocation rules
 ├── PHASES.md                     # Phase-by-phase orientation map
 └── README.md                     # This file

@@ -243,7 +243,7 @@ Do NOT query non-RaLHF connectors (Gmail, Calendar, Drive, Jira, QuickBooks, etc
 2. **Check the Trigger Signal Matching table** (below) — does the task match a pattern that calls for targeted browsing?
 
 3. **In parallel, drill and scan ALL sources:**
-   - **RaLHF wiki:** `browse_wiki(page_type=...)` / `browse_wiki(tag=...)`, then a single `batch_fetch([{kind:"wiki", page_id}, ...])` on the pages the catalog clearly calls out.
+   - **RaLHF wiki:** `browse_wiki(page_type=...)` / `browse_wiki(tag=...)`, then a single `batch_fetch([{kind:"wiki", page_id}, ...])` on the pages the catalog clearly calls out. **TOC-first ordering:** if the catalog includes a TOC-style page for the relevant project — titles matching patterns like *"Library Catalog Overview"*, *"<Project> Map"*, *"Index of …"*, *"Glossary"*, *"<Project> Architecture / Overview"* — fetch it FIRST in the wiki batch (or as a single-item batch ahead of the main batch). These pages list the rest as related artifacts and drive net-widening; under-fetching them is a named failure mode that produces a too-narrow Turn 2a. After the TOC page returns, build the wiki shortlist using its `related_pages[]` + `sources[]` together with whatever else the catalog called out.
    - **Claude memory** (every session): read any memory files the runtime loaded (`CLAUDE.md`, user memory). Look for user preferences, project conventions, recurring constraints.
    - **Local project files** (co-work mode only): `Glob("**/CLAUDE.md")`, `Glob("**/README*")`, `Glob(".claude/**")`, `Glob("**/*.md")` filtered to task-relevant paths. `Read` the shortlist — the repo's own `CLAUDE.md` is authoritative for project conventions (treat with the same weight as `personalized` rules).
    - **Session state:** don't re-read files already in context from earlier in the turn or session.
@@ -261,7 +261,8 @@ Do NOT query non-RaLHF connectors (Gmail, Calendar, Drive, Jira, QuickBooks, etc
 6. **STOP and triage source documents.** This is its own deliberate step — do NOT just "follow sources when relevant." After the task-relevant wiki pages are fetched, consolidate their `sources[]` arrays into a single list of source documents and rank them:
 
    **Ranking signals (highest first):**
-   - **Appears in multiple relevant wiki pages.** A source cited by 3 of your 5 fetched pages is load-bearing — auto-fetch it.
+   - **HARD §2.9.a — Multi-page backing.** Any source appearing in `sources[]` of ≥2 fetched wiki pages is **auto-fetch, no override**. Build this count BEFORE anything else; if ≥2, the source goes to "fetch" — no further judgment.
+   - **HARD §2.9.b — Central-to-the-task.** A source is central (never adjacent) if its title contains the project name, a documented predecessor / rename of it, multi-page backing per §2.9.a, an explicit `personalized` callout, or TOC-style markers (*"Library Catalog Overview"*, *"Index"*, *"<Project> Map"*, *"Glossary"*). Never downgrade a central match to adjacent because it feels tangential — that's a named bug. Auto-fetch.
    - **Recency.** Newer sources win on topics that drift (brand, product, pricing, org structure). Check the source's date vs the wiki page's `last_updated_at`.
    - **Direct task relevance.** A filename or description that matches the task shape (*"<company>-product-overview.pptx"* for a deck task) — auto-fetch.
    - **Type of source.** User-authored files (pptx, pdf, docx, md) are usually higher-value than API sync snapshots for creative tasks. For factual tasks, API sync snapshots (Gmail thread, Calendar event) often have the latest truth.
@@ -576,7 +577,7 @@ Phase 3 is the **asking + finalizing** phase. Phase 2 showed the user what was f
 
 **Phase 3 fires for every task.** Even on strong-context tasks where no concrete gap surfaced, the minimum-mode "anything else?" ask runs (Step 3a, mode B). Skipping Phase 3 is the failure mode this phase prevents — strong-context tasks are exactly where RaLHF over-trusts the wiki and misses what the user knows-but-hasn't-captured.
 
-**`AskUserQuestion` is BLOCKED by the plugin's PreToolUse hook.** All Phase 3 asks are plain text. This is deliberate — the structured-popup UX led Claude to ask clarifying questions *before* the skill fired, defeating the whole point.
+**Do NOT use `AskUserQuestion` — ever — while this skill is active.** All Phase 3 asks are plain text. This is deliberate: the structured-popup UX led Claude to ask clarifying questions *before* the skill fired, defeating the whole point. Plain-text questions one at a time per turn are the only acceptable form.
 
 **Phase 3 has up to four user-facing messages, each with ONE call-to-action:**
 
@@ -848,9 +849,9 @@ Phase 5 fires **after Claude has delivered the task output** (Phase 4 wraps with
 
 **On "yes":** Run the full feed-ralhf flow inline — see `skills/feed-ralhf/SKILL.md` for the exact procedure (dense `remember` summary, `start_file_upload` for any session files, `save_context_feedback` postmortem). Do not require the user to type `/feed-ralhf`.
 
-**On "no" / "not now" / "skip":** Acknowledge briefly. Step 2 (the `save_context_feedback` postmortem) still runs silently because the Stop hook requires it — but the heavier `remember` summary and file uploads are skipped.
+**On "no" / "not now" / "skip":** Acknowledge briefly. Step 2 (the `save_context_feedback` postmortem) still runs silently — it is mandatory before you wrap — but the heavier `remember` summary and file uploads are skipped.
 
-**On silence or ambiguity:** Treat as soft-decline. Do not run the heavy flow. The Stop hook still gates `save_context_feedback`.
+**On silence or ambiguity:** Treat as soft-decline. Do not run the heavy flow. Step 2's `save_context_feedback` call still runs.
 
 **When NOT to fire the ask:**
 - The user is mid-flow on follow-up work (asking for revisions, asking clarifying questions about the output) — wait until the *next* wrap-up signal.
@@ -861,13 +862,13 @@ In ambiguous cases, **err toward firing the ask**. A user saying "no thanks" onc
 
 ### Step 2 — Run regardless of the user's answer to Step 1
 
-These run silently in the background and are mandatory:
+These run silently in the background and are mandatory. **You MUST complete Step 2 before ending your turn on a wrap-up signal — do not let the session close without `save_context_feedback`.** This used to be enforced by a Stop hook; the hook was removed for cross-platform compatibility, so the discipline now lives here. If you used any RaLHF context tools this session (`get_wiki_catalog`, `browse_wiki`, `batch_fetch`, etc.), you owe a postmortem.
 
 1. **Sync corrections inline** — Save any new learnings the user volunteered DURING execution via `remember`. Use optional `dimension` and `source_description`. (This is mid-execution behavior, not the heavy end-of-session summary — that's gated on the Step 1 yes.)
 
 2. **Flag gaps** — If context was missing that would have helped, mention it once in the wrap-up.
 
-3. **Save context feedback** — Call `save_context_feedback` once per session. Required field: `overall_usefulness` (`high`/`medium`/`low`). Optional but recommended:
+3. **Save context feedback** — Call `save_context_feedback` once per session. **This is non-negotiable** — it captures what worked and what didn't so future sessions improve. Required field: `overall_usefulness` (`high`/`medium`/`low`). Optional but recommended:
    - `successful_strategies` — what worked (e.g. `"browsed tag=food_and_dining then fetched top entity pages"`)
    - `unsuccessful_strategies` — what didn't (e.g. `"user declined Gmail for dinner-planning"`)
    - `missing_context` — what you needed but couldn't find
@@ -900,11 +901,11 @@ The rules are grouped into 6 thematic clusters. Sub-bullets carry the load-beari
 These are non-negotiable transitions. Skipping any of them is a named failure mode.
 
 - **§1.1 Never execute before confirmation.** No connector queries beyond RaLHF, no document fetches beyond what Phase 1 already pulled, no task execution until the user approves. The pre-handoff check-in (end of Phase 2) is the gate.
-- **§1.2 `AskUserQuestion` is BLOCKED.** The PreToolUse hook denies it before the skill fires and during the skill. Phase 3 uses plain-text asks only — one short question per turn.
+- **§1.2 `AskUserQuestion` is BANNED.** Do not call it before the skill fires, do not call it during the skill. Phase 3 uses plain-text asks only — one short question per turn. (Previously enforced by a PreToolUse hook; the hook was removed for cross-platform compatibility, so the ban is now a strict skill-level rule. Treat any urge to call `AskUserQuestion` as a signal that you should be writing plain text instead.)
 - **§1.3 Safety-critical re-confirm (Step 3b) fires before Step 3c** (allergies, medications, medical restrictions). Plain-text question, never bundled with other asks.
 - **§1.4 HARD PRE-FLIGHT before composing Turn 2a — the document bucket is MANDATORY when wiki pages have any sources.** Before writing a single line of Turn 2a, walk through this checklist:
   - [ ] Did I fetch wiki pages via `batch_fetch`? *(Yes if Phase 0/1 returned content from at least one wiki page.)*
-  - [ ] Did I extract `sources[]` from each fetched wiki page? *(If the wiki batch spilled to a file, did I `Read` the spill file AND parse `items[]` to get each page's `sources[]`?)*
+  - [ ] Did I extract `sources[]` from each fetched wiki page? *(If the wiki batch spilled to a file: did I fully ingest the spill file per §2.7 — `Read` to EOF in chunks, parse every entry in `items[]`, extract each page's content + `sources[]` + `related_pages[]` — with no shortcuts like `Grep`-instead-of-Read or stop-after-first-few?)*
   - [ ] Did I run document-level triage on the consolidated `sources[]`? *(Classified each into fetch / skip per the §2.9 ranking signals — only two buckets.)*
   - [ ] **Did I err on the side of inclusion?** When triage signals were mixed or the title was ambiguous, did I prefer fetch over skip? *(Read-and-discard later is cheaper than missing relevant context.)*
   - [ ] Did I fan out **document `batch_fetch` calls (≤5 each, ≤3 each if a prior batch spilled) to pull every doc I judged relevant**?
@@ -974,9 +975,36 @@ Where context comes from, in what order, with what tools.
 - **§2.4 Use `browse_wiki` for narrowing, not `search`** (which is removed from the toolset). Follow `related_pages[]` wikilinks to expand.
 - **§2.5 Always `batch_fetch`, never `fetch` (the legacy single-item tool).** One round-trip beats many. Even for one item, `batch_fetch` returns a one-element list and is strictly more efficient. Partial failures: use what came back, flag missing items in Step 3a.
 - **§2.6 Cap each `batch_fetch` at ~5 items, fetch wiki BEFORE documents.** Large responses can exceed the tool-result token cap and spill to a file. Avoid by chunking proactively: wiki batch first (≤5 per call; fan out to multiple parallel calls if more pages needed), then document batch second (≤5 per call) once `sources[]` is in hand. Never mix kinds when the wiki batch is ≥3 items. Fetching wiki and documents separately also guarantees `sources[]` is available to drive document triage even if the document batch later spills.
-- **§2.7 If a result spills to a file (token cap exceeded), you MUST `Read` it before continuing.** The error message gives an absolute path and JSON schema. `Read` it in chunks if needed until 100% ingested, parse `items[]`, treat each entry as if returned inline (wiki content AND `sources[]` AND `related_pages[]`). Do NOT advance to Turn 2a, do NOT skip document triage, do NOT silently drop items. After ingesting, run document triage on consolidated `sources[]` and proceed. Going forward in the same task, drop the cap to ~3 items per call.
+- **§2.7 If a result spills to a file (token cap exceeded), you MUST fully ingest the spill file before continuing — no shortcuts.** The error message gives an absolute path to a JSON file with `{items: [...]}` schema. The spill file is NOT a summary, preview, or sample — it is the full tool payload, just relocated to disk because it didn't fit in the inline tool-result cap. Treat every byte as if it had returned inline.
+
+  Required steps (do ALL of them, in order):
+  1. `Read` the file starting at offset 0. If it doesn't fit in one read, continue with `offset` + `limit` in sequential chunks until you have read through end-of-file. **No early stopping** — "I've seen enough" is not allowed; the items at the tail of the file are not less important than items at the head.
+  2. Parse `items[]` and walk every entry. For each entry, extract three things — the wiki page (or document) **full content body**, the **complete `sources[]` array** (every entry, even ones whose titles look uninteresting), and the **complete `related_pages[]` array**.
+  3. Consolidate `sources[]` across every spilled wiki page into one document-triage list, exactly as you would for an inline batch.
+  4. Run document triage on the consolidated list per §2.9, then fetch judged-relevant documents in a fresh `batch_fetch(≤3 items)`. Do NOT skip this step "because the spill already returned a lot of content" — the spill returned wiki, not the documents the wiki points at.
+
+  **Prohibited shortcuts — do NOT do any of these:**
+  - `Grep`/`Glob` the spill file for keywords in place of reading it. Keyword matches miss pages with non-obvious titles; reading is mandatory.
+  - Read only the first 1–2 items and infer the rest. Spills routinely hold 5+ pages with diverse `sources[]`; sampling produces silently wrong triage.
+  - Use a single small `Read(limit=N)` and stop. If the file is large, chunk through it with `offset` until exhausted.
+  - Treat the spill as "partial success" and advance with whatever you saw inline before the spill triggered. The spill file IS the payload — what came back inline was the spill notification, not the data.
+  - Skip parsing `sources[]` because "the wiki content is enough." Source extraction is what makes document triage possible.
+  - Defer the spill-file read to Turn 2b or Phase 3. If a wiki batch spilled, you read it BEFORE composing Turn 2a — full stop.
+  - Trust filenames or page IDs you didn't actually read out of the file. If you reference an item in Turn 2a or downstream triage, it must come from a page you have actually ingested from the spill, not pattern-matched from an error message.
+
+  Going forward in the same task, drop subsequent `batch_fetch` cap to ~3 items per call to avoid re-spilling.
 - **§2.8 Spill is never a reason to defer the auto-fetch document bucket to Turn 2b** (see §1.4). Fan-out is the antidote, not deferral. `personalized` rules supersede defensive instinct: if the user has *"always fetch full document content for canonical references"*, spilling is irrelevant — auto-fetch runs regardless.
-- **§2.9 Document triage — two buckets only: fetch or skip.** RaLHF is the expert; reads what it judges relevant from `sources[]`, discards silently if a fetched doc turns out unhelpful. **No more "opt-in" punt to the user** (the old Turn 2b is gone — see §6.1). Ranking signals (highest first): appears in multiple fetched wiki pages → multi-page backing makes it load-bearing; recent (vs page `last_updated_at`); direct task relevance (title pattern matches task shape); `personalized` rule names it explicitly; type fits the task (user-authored files for creative work, API sync snapshots for factual). When triage signals are mixed and the title is ambiguous, **prefer fetch over skip** — read it, judge it, then decide. Discarded docs leave no trace in Turn 2a (silent) UNLESS the content changes the picture (staleness, superseded data) — in which case surface as a one-line note in Step 3a. Count follows fit: a small task may have 0 docs in 2a; a big task 10+. No artificial cap.
+- **§2.9 Document triage — two buckets only: fetch or skip.** RaLHF is the expert; reads what it judges relevant from `sources[]`, discards silently if a fetched doc turns out unhelpful. **No more "opt-in" punt to the user** (the old Turn 2b is gone — see §6.1). Ranking signals (highest first): multi-page backing (see §2.9.a — HARD); central-to-the-task (see §2.9.b — HARD); recent (vs page `last_updated_at`); direct task relevance (title pattern matches task shape); `personalized` rule names it explicitly; type fits the task (user-authored files for creative work, API sync snapshots for factual). When triage signals are mixed and the title is ambiguous, **prefer fetch over skip** — read it, judge it, then decide. Discarded docs leave no trace in Turn 2a (silent) UNLESS the content changes the picture (staleness, superseded data) — in which case surface as a one-line note in Step 3a. Count follows fit: a small task may have 0 docs in 2a; a big task 10+. No artificial cap.
+
+- **§2.9.a HARD: Multi-page backing → auto-fetch, no override.** Any source appearing in `sources[]` of **≥2 fetched wiki pages** is auto-fetch. This is not a "ranking signal you can outweigh" — it is a non-negotiable trigger. Multi-page citation means the wiki itself has decided this source is load-bearing across multiple aspects of the user's world; under-fetching it has been a named failure mode (e.g., a spec cited in Catalog + Context Package + GTM Brief was skipped at triage and produced an under-contextualized output). Build the citation count from the consolidated `sources[]` BEFORE any title/recency judgment runs. If the count is ≥2, the source moves to "fetch" — full stop. The only override is a `personalized` rule explicitly marking the source stale.
+
+- **§2.9.b HARD: Central-to-the-task vs adjacent — never bucket a central source as adjacent.** A source is **central** (auto-fetch, never adjacent) if any of:
+  - Title contains the project/product name the task is about, OR a documented predecessor / former name / rename of it (e.g., "Memoire" for a "Catalog" task, "Cowork" docs for a "RaLHF" task — they are the formal precedent or the spine).
+  - Multi-page backing per §2.9.a.
+  - Named explicitly in `personalized` rules for this task shape.
+  - Title contains terms like *"Library Catalog Overview"*, *"Index"*, *"Table of Contents"*, *"<Project> Map"*, *"Glossary"* — these define what else exists and drive net-widening.
+
+  Adjacency is a default for sources that don't match any central trigger. **Never downgrade a central match to adjacent because it "feels" tangential to the immediate ask.** If you find yourself reasoning *"X is related but not directly about Y"* for a source matching any central trigger, that's the named bug — fetch it.
 - **§2.10 Parallelize Phase 0 + Phase 1 tool calls** after the greeting. Multiple `browse_wiki` can fire concurrently; multiple `batch_fetch(≤5)` can fire concurrently when more than 5 pages are needed.
 - **§2.11 Err on the side of inclusion in RaLHF; err on the side of *proposal* for connectors.** Fetch everything potentially useful from RaLHF directly. For non-RaLHF connectors, list them in Step 3a and let the user pick.
 - **§2.12 Claude memory and local project files are scanned in Phase 1 in PARALLEL with wiki, not after.** In co-work mode, both Wiki AND Local must be scanned (tracked internally; not printed). Project's own `CLAUDE.md` has authoritative weight equal to `personalized` rules for project conventions. **Local enumeration is gated by §1.8** — folder-shape detection (code repo vs content library) drives breadth, then §2.9-style triage drives selection. Vague *"filtered to task-relevant paths"* is the failure mode — for content libraries, "task-relevant" means the whole content folder, not files named after the deliverable. Include relevant local/memory hits in Turn 2a as separate source blocks (*"From your project"*, *"From the local Cowork folder"*, *"From Claude's memory"*) using the title + filename + `[mtime · path]` format.
@@ -1084,7 +1112,7 @@ Phase 2 (two staged check-ins) flows into Phase 3 (gaps + safety + final + Libra
 - **`get_instructions` fails:** Proceed with RaLHF defaults. Note in Phase 5 feedback that personalized instructions were unavailable.
 - **`get_wiki_catalog` returns empty or fails:** User may be new to RaLHF or wiki not yet built. Say so: "Your RaLHF wiki is empty — I don't have personal context to draw from yet." Fall back to Claude memory and session state. Still run Phase 2 with an empty "From RaLHF" section and propose whatever connectors make sense.
 - **`batch_fetch` returns a partial result (some items succeeded, some failed):** Use what came back; for the failed items, note in Phase 2 Gaps: "Couldn't load [page title] — working with what I have." Do not retry the whole batch — just continue with the successful results.
-- **`batch_fetch` (or any tool) result is saved to a file because it exceeded the token cap:** The error message gives an absolute file path and the schema. **Read the file before continuing** — use offset/limit if it's large, in sequential chunks until 100% is ingested. Parse `items[]` and treat each entry as if it had returned inline: ingest the wiki page content AND its `sources[]` / `related_pages[]`, then run document triage as normal. Never advance to Turn 2a or skip document triage just because the result spilled to a file. Going forward in the same task, **chunk subsequent `batch_fetch` calls more aggressively** (≤3 items per call instead of 5) to avoid repeating the spill.
+- **`batch_fetch` (or any tool) result is saved to a file because it exceeded the token cap:** Follow §2.7 in full — no shortcuts. The error message gives an absolute file path; the file is `{items: [...]}` with the complete payload, NOT a sample. **Read the file from offset 0 through end-of-file, in sequential chunks if large.** Parse every entry in `items[]` and treat it as if it had returned inline: ingest the wiki page content AND its `sources[]` AND its `related_pages[]`. Then run document triage on the consolidated `sources[]` and fetch judged-relevant docs in a fresh `batch_fetch(≤3 items)`. Forbidden: `Grep`-ing the spill file for keywords, sampling the first few items, treating the inline spill notification as "partial success", or skipping `sources[]` extraction. Going forward in the same task, chunk subsequent `batch_fetch` calls more aggressively (≤3 items per call instead of 5) to avoid repeating the spill.
 - **`remember` fails during execution (Turn 2b connector loop or Phase 4):** Tell the user. Include the unsaved content in your response. Retry once.
 - **All RaLHF tools fail:** Tell the user RaLHF is unreachable. Proceed with Claude memory only. Skip connector proposals (there's nothing to anchor them to) — propose based on task type only, clearly flagged.
 
