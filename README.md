@@ -107,17 +107,28 @@ Three `cat`-based hooks ship with the plugin. They provide mechanical enforcemen
 
 The Stop / PostToolUse / SessionEnd hooks from earlier versions were removed because they needed JSON-parsing logic that doesn't translate cleanly across `/bin/sh` and `cmd.exe`. Their job (mandate `save_context_feedback`, track tool usage) is handled by the skill itself in Phase 5.
 
-### MCP tools (provided by the RaLHF backend)
+### MCP tools (provided by the RaLHF backend — 11 total)
+
+**Used by the five-phase flow (8):**
+
 | Tool | Purpose |
 |---|---|
 | `get_instructions` | Returns generic + personalized retrieval rules learned from this user's prior sessions |
 | `get_wiki_catalog` | Full grouped map of the user's wiki — narrative, page IDs, tags, wikilinks |
-| `browse_wiki` | Drill into the catalog by `page_type` or `tag` with pagination |
-| `batch_fetch` | Read full content for one or many wiki pages / source documents in a single round-trip |
-| `remember` | Save a fact, preference, or correction (≤1000 chars), optionally tagged with a life-area dimension |
+| `browse_wiki` | Drill into the catalog by `page_type` or `tag` with pagination (requires `scope`) |
+| `batch_fetch` | Read full content for 1–20 wiki pages / source documents in a single round-trip (replaces the legacy single-item `fetch`) |
+| `remember` | Save a fact, preference, or correction (≤8000 chars), optionally tagged with a life-area dimension |
 | `start_file_upload` | Get a short-lived upload URL + bearer token to ingest a user file |
 | `check_file_upload_status` | Poll the status of an uploaded file |
-| `save_context_feedback` | Submit a structured postmortem on how context assembly went |
+| `save_context_feedback` | Submit a structured postmortem on how context assembly went (Phase 5 close-out) |
+
+**Available but not part of the standard flow (3):**
+
+| Tool | Purpose |
+|---|---|
+| `search` | Narrow-scope keyword search across wiki pages. Backstop for known-target lookups when browsing has failed; the flow prefers `browse_wiki` + `related_pages[]`. |
+| `list_connected_sources` | Returns connected providers (Fitbit, Gmail, Spotify, etc.) + available-but-unconnected list. On-demand when the user asks "is my X synced?" |
+| `get_my_mcp_usage` | Telemetry on the caller's own RaLHF usage — `last_used_at`, `usage_count`, per-tool breakdown. On-demand when the user asks about their own usage history. |
 
 ---
 
