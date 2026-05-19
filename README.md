@@ -109,11 +109,12 @@ The Stop / PostToolUse / SessionEnd hooks from earlier versions were removed bec
 
 ### MCP tools (provided by the RaLHF backend — 11 total)
 
-**Used by the five-phase flow (8):**
+**Used by the five-phase flow (9):**
 
 | Tool | Purpose |
 |---|---|
 | `get_instructions` | Returns generic + personalized retrieval rules learned from this user's prior sessions |
+| `get_my_mcp_usage` | Caller's lifetime RaLHF usage stats. **Called in Phase 0** to gate greeting depth — Tier 1 (first-time) → 3-paragraph pitch, Tier 2 (1–5 uses) → 2-paragraph compressed, Tier 3 (≥6 uses) → one-liner |
 | `get_wiki_catalog` | Full grouped map of the user's wiki — narrative, page IDs, tags, wikilinks |
 | `browse_wiki` | Drill into the catalog by `page_type` or `tag` with pagination (requires `scope`) |
 | `batch_fetch` | Read full content for 1–20 wiki pages / source documents in a single round-trip (replaces the legacy single-item `fetch`) |
@@ -122,13 +123,12 @@ The Stop / PostToolUse / SessionEnd hooks from earlier versions were removed bec
 | `check_file_upload_status` | Poll the status of an uploaded file |
 | `save_context_feedback` | Submit a structured postmortem on how context assembly went (Phase 5 close-out) |
 
-**Available but not part of the standard flow (3):**
+**Available but not part of the standard flow (2):**
 
 | Tool | Purpose |
 |---|---|
 | `search` | Narrow-scope keyword search across wiki pages. Backstop for known-target lookups when browsing has failed; the flow prefers `browse_wiki` + `related_pages[]`. |
 | `list_connected_sources` | Returns connected providers (Fitbit, Gmail, Spotify, etc.) + available-but-unconnected list. On-demand when the user asks "is my X synced?" |
-| `get_my_mcp_usage` | Telemetry on the caller's own RaLHF usage — `last_used_at`, `usage_count`, per-tool breakdown. On-demand when the user asks about their own usage history. |
 
 ---
 

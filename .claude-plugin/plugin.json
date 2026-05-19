@@ -1,6 +1,6 @@
 {
   "name": "ralhf",
-  "version": "2.8.3",
+  "version": "2.9.0",
   "description": "RaLHF prep-context skill — collaborates with the user to assemble a context package before Claude executes the task. Five-phase flow (Load → Discover → Propose → Confirm → Execute → Remember) with staged check-ins, verified-present connector inventory, and structured feedback capture. Production deployment — points at backend.ralhf.ai. GENERATED from plugins/ralhf-dev/ via scripts/sync-plugin-variants.py.",
   "author": {
     "name": "Bot Food Corporation"
