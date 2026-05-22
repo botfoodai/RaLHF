@@ -355,27 +355,59 @@ When a section is empty, write ONE status line under the header instead of bulle
 
 The status line tells the customer the section was checked and what was found. The section header itself never gets dropped or renumbered.
 
-### Format for Sections 1 and 2 (wiki pages and library docs — linked)
+### Format for Sections 1 and 2 (wiki pages and library docs — ALWAYS linked)
 
-Wiki pages and library documents have URLs in their metadata, so render the identifier as a clickable markdown link:
+**Sections 1 and 2 items are ALWAYS markdown links. No exceptions when the data has a URL — and it always does for both sections.** Render the identifier as a clickable markdown link:
 
 ```
-- **[<title>](<url>)** (<date>)
+- **[<identifier>](<url>)** (<date>)
   - <very short description, 5 to 12 words>
 ```
 
-- **Section 1 (wiki pages):** link text is the page title from the catalog. URL is the wiki page URL. Date prefix is "updated".
-- **Section 2 (personal context library docs):** link text is the source's **`filename`** field from `sources[]` metadata — rendered **verbatim, character-for-character, with extension**. URL is the source's `url` field (typically `https://app.ralhf.ai/my-content?fileId=<id>`). Use the source's `updated_at` date.
+The `[<identifier>](<url>)` wrapper is **mandatory** for both sections. The model must NOT drop the brackets / parentheses and render bare bold filenames — that's the Section 3 format (Cowork local files), not Section 2.
 
-**Render the filename VERBATIM.** Do NOT humanize. Do NOT replace underscores with spaces. Do NOT strip the extension. Do NOT title-case. Do NOT clean up punctuation. The customer wants to see the file exactly as it exists in their library — `Q1_2026_Quarterly_Update.docx` stays as `Q1_2026_Quarterly_Update.docx`, not `Q1 2026 Quarterly Update`. `Bot Food - One Pager v2.8.pdf` stays as `Bot Food - One Pager v2.8.pdf`. Whatever string is in the `filename` field, that's the link text — exactly.
+- **Section 1 (wiki pages):**
+  - **Identifier** = the page title from the catalog
+  - **URL** = the wiki page's `url` field
+  - **Date prefix:** `updated`
+  - **Form:** `- **[<page title>](<wiki url>)** (updated <date>)`
 
-**Field precedence for the link text:**
-1. `filename` field (use if present — always preferred)
-2. `title` field (humanized fallback — use ONLY when `filename` is genuinely absent from the source object)
+- **Section 2 (personal context library docs):**
+  - **Identifier** = the source's **`filename`** field from `sources[]` metadata (e.g. `Q1_2026_Quarterly_Update.docx`, `Bot Food - One Pager v2.8.pdf`)
+  - **URL** = the source's `url` field (typically `https://www.ralfh-dev.com/my-content?fileId=<id>` on dev, `https://app.ralhf.ai/my-content?fileId=<id>` on prod — use whatever the data returns)
+  - **Date:** the source's `updated_at` (no `updated` prefix needed)
+  - **Form:** `- **[<filename>](<source url>)** (<date>)`
 
-The backend reliably populates `filename` for source documents today (confirmed by inspecting actual `sources[]` responses). Earlier versions of this spec said the filename field didn't exist; that's no longer true. If you see a source without a `filename` field, the data is genuinely missing it — fall back to `title`.
+**The link wrapper is required. The "verbatim" rule below applies to the FILENAME STRING inside the link text, NOT to the markdown formatting around it.** A correctly rendered Section 2 item looks like:
 
-If a URL is genuinely unavailable (rare), render without the link rather than fabricating one: `- **filename.ext** (date)`. Never invent a URL.
+```
+- **[Bot Food - One Pager v2.8.pdf](https://www.ralfh-dev.com/my-content?fileId=caf96653-...)** (Apr 21, 2026)
+  Investor one-pager structural reference
+```
+
+The filename `Bot Food - One Pager v2.8.pdf` is verbatim. The `[...](url)` brackets are required.
+
+#### What "verbatim" means for the filename STRING
+
+The filename inside the link text is rendered character-for-character. Do NOT humanize. Do NOT replace underscores with spaces. Do NOT strip the extension. Do NOT title-case. Do NOT clean up punctuation. Whatever string is in the `filename` field, that's the link text — exactly:
+
+- `Q1_2026_Quarterly_Update.docx` → link text `Q1_2026_Quarterly_Update.docx` (not `Q1 2026 Quarterly Update`)
+- `board_decks_2025_2026.pptx` → link text `board_decks_2025_2026.pptx` (not `Board Decks 2025-2026`)
+- `Screenshot 2026-02-16 at 7.36.43 AM.png` → link text `Screenshot 2026-02-16 at 7.36.43 AM.png` (verbatim, keep the spaces and colons)
+- `Bot Food - One Pager v2.8.pdf` → link text `Bot Food - One Pager v2.8.pdf` (keep the spaces, hyphens, version)
+
+Verbatim ≠ unlinked. The markdown wrapper goes around the verbatim string.
+
+#### Field precedence for the link text
+
+1. `filename` field (use if present and non-null — always preferred)
+2. `title` field (humanized fallback — use ONLY when `filename` is null/absent for that source)
+
+The backend reliably populates `filename` for source documents today (confirmed by inspecting actual `sources[]` responses on 2026-05-22). The few cases where `filename` is `null` are wiki-internal items, not file-backed documents.
+
+#### Edge case: URL genuinely missing (rare, almost never)
+
+If a source has `url: null` (extremely rare in practice — the `url` field is reliably populated alongside `filename`), render the item without a link as `- **<filename>** (<date>)`. **This is NOT a template — it's a last-resort fallback when the URL data is genuinely absent.** Do NOT use this form when the URL exists. Never fabricate a URL.
 
 ### Format for Section 3 (Cowork folder — plain filenames, no link)
 
