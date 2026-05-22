@@ -17,18 +17,32 @@ For any task, walk through these questions in your head before firing tools:
 ## Tool sequence — canonical pattern
 
 ```
-1. get_instructions                         → personalized rules (READ word-for-word)
-2. get_wiki_catalog                         → full wiki map (filter through personalized rules)
-3. browse_wiki(page_type=…) (parallel ×N)   → narrow by type/tag for the task domains
-4. batch_fetch([{kind:"wiki", page_id}, ...]) (≤5 per call, fan out parallel for more)
-                                            → read the relevant wiki pages
-5. Triage sources[] from returned pages     → auto-fetch / opt-in / skip per §2.9
-6. batch_fetch([{kind:"document", page_id}, ...]) (≤5 per call)
-                                            → pull the auto-fetch document bucket
-7. (Turn 2b only, after user approval)      → connector queries (Gmail/Drive/etc.)
+1. get_instructions                                    → personalized rules (READ word-for-word)
+2. get_wiki_catalog                                    → ORIENTATION ONLY (narrative summary,
+                                                          page-type counts, top tags, top-5 per
+                                                          type). Page lists are TRUNCATED — not
+                                                          the discovery surface.
+3. browse_wiki(page_type=…, search_text=…) (parallel)  → primary discovery. Combine page_type +
+   browse_wiki(tag=…, search_text=…)        ×N           tag + search_text for max precision.
+   browse_wiki(page_type=…, offset=N, limit=100)         Paginate for full category sweeps.
+4. search(query="…") (only if needed)                  → narrow-target backstop. Use ONLY for
+                                                          a specific name/phrase that didn't
+                                                          surface via browse_wiki(search_text=…).
+5. batch_fetch([{kind:"wiki", page_id}, ...]) (1 item   → read the relevant wiki pages.
+   per call, fired parallel for N pages)
+6. Triage sources[] from returned pages                → auto-fetch / opt-in / skip per §2.9
+7. batch_fetch([{kind:"document", page_id}, ...])      → pull the auto-fetch document bucket
+   (1 item per call, parallel)
+8. (Turn 2b only, after user approval)                 → connector queries (Gmail/Drive/etc.)
 ```
 
-In parallel with steps 3–6: scan Claude memory, local project files (co-work mode), and any session state already loaded.
+In parallel with steps 3–7: scan Claude memory, local project files (co-work mode), and any session state already loaded.
+
+### Why this order
+
+- **Catalog is orientation, not enumeration.** Its page lists are truncated to top-5 per type. A 939-page wiki returns ~21 pages from the catalog. Don't pick exclusively from those — most of the wiki is invisible.
+- **`browse_wiki` with combined filters is the workhorse.** `browse_wiki(page_type="entity", search_text="investor")` is far more precise than either filter alone, and far higher recall than the catalog's top-5 entities. Fire 2–4 parallel calls with different filter combinations.
+- **`search` is the narrow-target backstop, not the primary tool.** The MCP authors explicitly warn that blind search misses connective data the structured browse path surfaces. Use search only when a specific named page or one-off phrase didn't appear via `browse_wiki(search_text=…)`.
 
 ## Worked decomposition examples
 
@@ -39,9 +53,10 @@ Each example shows the internal answer to questions 1–5 above for a specific t
 - **Action:** plan + decide (restaurant + reservation logistics)
 - **Domains:** `food_and_dining`, `entertainment`, partner relationship (`identity`), local geography (`home_and_auto`)
 - **Already in context:** none
-- **What RaLHF likely has:**
-  - `browse_wiki(page_type="profile")` — Identity Profile, partner profile
-  - `browse_wiki(tag="food_and_dining")` — Dining Preferences, Household Food Rules, Celebration History
+- **What RaLHF likely has** (combined-filter browse):
+  - `browse_wiki(page_type="profile", search_text="food")` — Identity Profile, Food and Dining Profile, partner profile
+  - `browse_wiki(tag="food_and_dining", search_text="anniversary")` — Dining Preferences, Celebration History
+  - `browse_wiki(tag="food_and_dining", search_text="restaurant")` — Household Food Rules, prior restaurant choices
 - **Batch plan:**
   - First batch (wiki ×4): Dining Preferences, Household Food Rules, Celebration History, partner entity page
   - Second batch (documents from `sources[]`): prior reservation confirmations, booking receipts — auto-fetch the most-cited and recent
@@ -53,11 +68,13 @@ Each example shows the internal answer to questions 1–5 above for a specific t
 - **Action:** build (deliverable: standalone deck following established cadence)
 - **Domains:** `work_and_learning`, `money`
 - **Already in context:** task name, company name
-- **What RaLHF likely has:**
-  - `browse_wiki(page_type="entity")` — Company entity, founder entities
-  - `browse_wiki(page_type="profile")` — Money profile, Work And Learning Profile
-  - `browse_wiki(page_type="summary")` — prior quarterly updates, recent decisions
-  - `browse_wiki(page_type="concept")` — Brand Guidelines, Quarterly Board Procedures
+- **What RaLHF likely has** (combined-filter browse):
+  - `browse_wiki(page_type="entity", search_text="<Company>")` — Company entity, founder entities
+  - `browse_wiki(page_type="profile", search_text="money")` — Money profile
+  - `browse_wiki(page_type="summary", search_text="quarterly")` — prior quarterly updates
+  - `browse_wiki(page_type="summary", search_text="board")` — prior board materials
+  - `browse_wiki(page_type="concept", search_text="brand")` — Brand Guidelines
+  - `browse_wiki(page_type="concept", search_text="board")` — Quarterly Board Procedures
 - **Batch plan:**
   - First batch (wiki ×5–7): Company entity, Quarterly Board Meeting page, Money profile, Brand Guidelines, recent quarterly summary
   - Second batch (documents from `sources[]`): prior board decks, prior quarterly update doc, brand guide pptx, financial source — auto-fetch the multi-page-backed and recent
@@ -69,10 +86,11 @@ Each example shows the internal answer to questions 1–5 above for a specific t
 - **Action:** draft (continuing series)
 - **Domains:** `work_and_learning`, `social_and_digital_life`
 - **Already in context:** "newsletter"
-- **What RaLHF likely has:**
-  - `browse_wiki(page_type="entity")` — Newsletter entity
-  - `browse_wiki(page_type="summary")` — prior issue summaries, recent product/company updates worth surfacing
-  - `browse_wiki(page_type="concept")` — Brand Voice & Tone, Style Guidelines
+- **What RaLHF likely has** (combined-filter browse):
+  - `browse_wiki(page_type="entity", search_text="newsletter")` — Newsletter entity
+  - `browse_wiki(page_type="summary", search_text="newsletter")` — prior issue summaries
+  - `browse_wiki(page_type="summary", search_text="<product>")` — recent product updates worth surfacing
+  - `browse_wiki(page_type="concept", search_text="voice")` / `search_text="brand"` — Brand Voice & Tone, Style Guidelines
 - **Batch plan:**
   - First batch (wiki ×4): Newsletter entity, last 2 issue summaries, Brand Voice
   - Second batch (documents): prior sent newsletters, the template, brand voice guidelines doc
@@ -84,9 +102,12 @@ Each example shows the internal answer to questions 1–5 above for a specific t
 - **Action:** write (relational, audience-specific tone)
 - **Domains:** `identity` (child, family), `work_and_learning` (school)
 - **Already in context:** none
-- **What RaLHF likely has:**
-  - `browse_wiki(page_type="profile")` — Identity Profile (children section), Education Profile
-  - `browse_wiki(page_type="entity")` — Child entity, School entity, Teacher entity (if captured)
+- **What RaLHF likely has** (combined-filter browse):
+  - `browse_wiki(page_type="profile", search_text="identity")` — Identity Profile (children section)
+  - `browse_wiki(page_type="profile", search_text="education")` — Education Profile
+  - `browse_wiki(page_type="entity", search_text="<child name>")` — Child entity
+  - `browse_wiki(page_type="entity", search_text="school")` — School entity
+  - `search(query="<teacher name>")` — narrow-target lookup if the teacher has a wiki entity, since teacher names rarely fit a category keyword
 - **Batch plan:**
   - First batch (wiki ×4): Child entity, Teacher entity, School entity, Education Profile
   - Document bucket: usually thin for personal-relational tasks — auto-fetch may be empty, in which case Turn 2b is skipped
@@ -98,10 +119,11 @@ Each example shows the internal answer to questions 1–5 above for a specific t
 - **Action:** code change (architectural decision)
 - **Domains:** `work_and_learning` (technical)
 - **Already in context (co-work mode):** repo structure, files in working tree
-- **What RaLHF likely has:** less than usual for code work — focus on design rationale and prior decisions
-  - `browse_wiki(page_type="concept")` — auth-related architecture concepts
-  - `browse_wiki(page_type="summary")` — prior decisions about this work
-  - `browse_wiki(page_type="comparison")` — pattern comparisons (e.g., session vs. token approaches)
+- **What RaLHF likely has** (combined-filter browse — usually thin for code work, focus on design rationale and prior decisions):
+  - `browse_wiki(page_type="concept", search_text="auth")` — auth-related architecture concepts
+  - `browse_wiki(page_type="summary", search_text="auth")` — prior decisions about this work
+  - `browse_wiki(page_type="comparison", search_text="auth")` — pattern comparisons (session vs. token approaches)
+  - `browse_wiki(tag="work_and_learning", search_text="auth")` — anything tagged work-and-learning mentioning auth, regardless of page type
 - **Local-file scan in parallel:** `Glob("**/CLAUDE.md")`, `Glob("**/README*")`, repo-level config and design docs
 - **Batch plan:**
   - First batch (wiki ×3): auth concept page, recent architecture summary, relevant comparison
@@ -112,7 +134,8 @@ Each example shows the internal answer to questions 1–5 above for a specific t
 ## Heuristics to internalize
 
 - **Cost asymmetry:** loading context that turns out irrelevant costs seconds. Missing context that turns out critical costs 2–3 revision cycles. When uncertain, fetch the wiki side; propose the connector side for user approval.
-- **Catalog scan first, not page-fetch first.** Do not `batch_fetch` random pages by guessing IDs. Walk the catalog, match `page_type` and `tag`, then fetch the shortlist.
+- **Catalog is orientation, browse_wiki is discovery.** The catalog gives you counts, top tags, and the top-5 pages per type — orientation, not enumeration. Use `browse_wiki(page_type=…, search_text=…)` with combined filters to find task-relevant pages in the long tail (the 90%+ of the wiki that's invisible to the catalog). Fire 2–4 parallel browse calls per task.
+- **Do not `batch_fetch` random pages by guessing IDs.** Always derive IDs from `browse_wiki` / `search` / `related_pages[]` / `sources[]` first.
 - **Sources are the discovery, not the wiki page.** A wiki page with `source_count: 140` has 140 documents that back it. The page is a pointer; the `sources[]` are where the substance lives. Document triage (§2.9) is non-negotiable.
 - **Empty shortlists are a real result.** If the catalog scan returns nothing for a tag/type, record it as `Wiki [Y]` with zero hits — not as `N`. Tells you to lean harder on connectors (Turn 2b) or `/ralhf-learn` invitations (Step 3a).
 - **Co-work mode means dual-source.** Both Wiki AND Local must be scanned in parallel. The repo's own `CLAUDE.md` has authoritative weight equal to `personalized` rules for project conventions.

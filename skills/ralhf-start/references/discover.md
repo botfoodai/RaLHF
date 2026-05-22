@@ -13,7 +13,14 @@ Do NOT query non-RaLHF connectors (Gmail, Calendar, Drive, Jira, QuickBooks, etc
 2. **Check the Trigger Signal Matching table** below. Does the task match a pattern that calls for targeted browsing?
 
 3. **In parallel, drill and scan ALL sources:**
-   - **Personal wiki (Section 1):** `browse_wiki(page_type=...)` / `browse_wiki(tag=...)`, then single-item `batch_fetch` calls for each page the catalog clearly calls out. Fire fetches in parallel. **The fetch is required because Section 2 of Turn 2a is populated from the `sources[]` arrays returned by these fetches.**
+   - **Personal wiki (Section 1):** **the catalog's page lists are TRUNCATED to the top ~5 per type by source-count/recency — they are NOT the discovery surface.** Use `browse_wiki` aggressively with **combined filters** (`page_type` + `tag` + `search_text` together) to reach the long tail. The catalog earns its keep on counts / top tags / namespaces / narrative summary, not on its truncated page lists. Examples:
+     - `browse_wiki(page_type="entity", search_text="<task-keyword>")` — type-scoped keyword filter, much higher precision than a global search.
+     - `browse_wiki(tag="<dimension>", search_text="<task-keyword>")` — tag-scoped keyword filter, narrows by life area + topic.
+     - `browse_wiki(page_type="<type>", tag="<dimension>", search_text="<keyword>")` — all three combined for max precision.
+     - `browse_wiki(page_type="<type>", offset=0, limit=100)` then `offset=100, limit=100` — pagination when you need to scan a full category (318 concepts, 404 summaries, etc.).
+     - **Fire 2–4 parallel `browse_wiki` calls** with different filter combinations per task — one per relevant page_type, one per relevant tag, plus combined-filter variants. The cost is one round-trip; the recall improvement is large.
+     - **`search(...)` is the narrow-target backstop**: use when you know a specific named page or one-off phrase that doesn't fit a page_type/tag (e.g. a person's name, a unique product term) AND your `browse_wiki(search_text=...)` filters didn't surface it. Never use as the primary discovery tool — the MCP authors explicitly warn that blind searching misses connective data.
+     - Then single-item `batch_fetch` calls for each page identified. Fire fetches in parallel. **The fetch is required because Section 2 of Turn 2a is populated from the `sources[]` arrays returned by these fetches.**
    - **Personal context library (Section 2):** after wiki pages are fetched, consolidate their `sources[]` arrays. Triage each source for task relevance. The task-relevant ones appear as flat bullets in Section 2 of Turn 2a. A document that's also in the Cowork folder (Section 3) appears in BOTH sections — duplication is signal, not noise.
    - **Claude memory** (every session): read any memory files the runtime loaded (`CLAUDE.md`, user memory). Look for customer preferences, project conventions, recurring constraints.
    - **Local project files** (co-work mode only): see the "Local folder enumeration" subsection below for the exact procedure. The brand voice file, current one-pager, and other root-level artifacts are easy to miss when starting from subdirectories.
@@ -38,14 +45,17 @@ When a Cowork folder is mounted, follow this exact sequence:
 
 ## Trigger Signal Matching
 
-| Signal in the customer's request | Pattern | What to browse |
+**Use combined filters in every row** (`page_type` + `tag` + `search_text`). Single-filter `browse_wiki` calls hit too many pages and miss the long tail; combined filters are much more precise.
+
+| Signal in the customer's request | Pattern | What to browse (use combined filters) |
 |-----|---------|---------------|
-| References a named product or company, output for an external audience | Brand & style identity | `browse_wiki(page_type="concept")` and `browse_wiki(tag="work_and_learning")`, look for pages titled like "Brand Voice", "Style Guide", "Identity"; check `last_updated_at` for staleness |
-| Writing about what a product does (marketing, pitch, one-pager) | Product knowledge | `browse_wiki(page_type="entity")` filtered by the product name; `browse_wiki(tag="work_and_learning")` for PRDs / specs / terminology |
-| References "the last one", prior installments, numbered editions | Prior work in a series | catalog scan for entries with version/date markers; `browse_wiki(page_type="summary")` for prior-edition summaries |
-| Says "picking up where we left off", "we decided" | Decisions from prior sessions | `browse_wiki(page_type="summary")` and `browse_wiki(page_type="comparison")` |
-| States a budget, time limit, headcount, or automation constraint | Execution constraints | `browse_wiki(tag="money")` for pricing/benchmarks; `browse_wiki(tag="work_and_learning")` for team constraints |
-| Deliverable names a specific audience (board, investors, judges) | Audience context | `browse_wiki(page_type="profile")` for audience profiles; `browse_wiki(page_type="entity")` for the named audience |
+| References a named product or company, output for an external audience | Brand & style identity | `browse_wiki(page_type="concept", search_text="brand")`, `browse_wiki(page_type="concept", search_text="style")`, `browse_wiki(tag="work_and_learning", search_text="identity")`; check `last_updated_at` for staleness |
+| Writing about what a product does (marketing, pitch, one-pager) | Product knowledge | `browse_wiki(page_type="entity", search_text="<product name>")`, `browse_wiki(tag="work_and_learning", search_text="<product name>")` for PRDs / specs / terminology |
+| References "the last one", prior installments, numbered editions | Prior work in a series | `browse_wiki(page_type="summary", search_text="<series keyword>")`; `browse_wiki(page_type="summary", offset=0, limit=50)` to scan recent summaries if no keyword fits |
+| Says "picking up where we left off", "we decided" | Decisions from prior sessions | `browse_wiki(page_type="summary", search_text="<topic>")`, `browse_wiki(page_type="comparison", search_text="<topic>")` |
+| States a budget, time limit, headcount, or automation constraint | Execution constraints | `browse_wiki(tag="money", search_text="pricing")` / `search_text="budget"`; `browse_wiki(tag="work_and_learning", search_text="team")` for team constraints |
+| Deliverable names a specific audience (board, investors, judges) | Audience context | `browse_wiki(page_type="profile", search_text="<audience keyword>")`, `browse_wiki(page_type="entity", search_text="<audience name>")` |
+| Specific named person, place, or one-off phrase that doesn't fit a category | Known-target lookup | `search(query="<exact name or phrase>")` — narrow-target backstop only. Use AFTER `browse_wiki(search_text=...)` filters have been tried. |
 
 ## Source document ranking signals (highest first)
 

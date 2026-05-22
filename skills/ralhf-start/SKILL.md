@@ -233,7 +233,7 @@ If any box is unchecked, fix it before composing Turn 2a.
 Retrieval is structured by what Turn 2a needs to produce. The four sections each have a retrieval prerequisite:
 
 **Section 1 prerequisite — personal wiki:**
-1. `browse_wiki(page_type=...)` or `search(...)` to identify task-relevant pages.
+1. **Use `browse_wiki` with combined filters as the primary discovery tool**, NOT the catalog's truncated page list (which only returns ~5 pages per type). Fire 2–4 parallel `browse_wiki` calls per task with combinations like `browse_wiki(page_type="entity", search_text="<keyword>")`, `browse_wiki(tag="<dimension>", search_text="<keyword>")`, `browse_wiki(page_type="<type>", tag="<dimension>", search_text="<keyword>")`. Paginate (`offset` + `limit=100`) when you need a full category sweep. `search(query=...)` is the narrow-target backstop for specific names/phrases that didn't surface via `browse_wiki(search_text=...)` — NOT a primary discovery tool. See `references/discover.md` and `references/context-decomposition.md`.
 2. `batch_fetch` on every identified page. **EXACTLY ONE item per call.** Fire N separate calls in parallel for N pages — never pack multiple page IDs into a single call's args array. Page body sizes are unpredictable from catalog data; multi-item calls reliably spill.
 3. **Spill recovery:** if any `batch_fetch` call spills past the token limit (whether multi-item OR single-item), do NOT abandon the page. Two recovery paths:
    - **Multi-item spill:** retry with single-item calls, one page at a time.
@@ -651,8 +651,9 @@ These apply in every phase. Honor them without needing to load a reference:
 |---|---|---|
 | `get_instructions` | Returns `general` + `personalized`. First call every session. | Phase 0 |
 | `get_my_mcp_usage` | Telemetry — `usage_count` gates the Phase 0a Small-task opt-in AND informs greeting length. Quota-exempt. Fires BEFORE the greeting. | Phase 0a + on-demand |
-| `get_wiki_catalog` | Grouped TOC of the customer's wiki. | Phase 0 |
-| `browse_wiki` | Drill into the catalog by `page_type` or `tag`. | Phase 1 |
+| `get_wiki_catalog` | **Orientation only** — narrative summary + stats + top-5 pages per type. Page lists are TRUNCATED to top-5 per type; NOT the discovery surface. Use for the greeting and for picking which `page_type` / `tag` to drill into. | Phase 0 |
+| `browse_wiki` | **Primary discovery tool.** Combine `page_type` + `tag` + `search_text` filters for precision. Paginate (`offset` + `limit=100`) for full category sweeps. Fire 2–4 parallel calls per task with different filter combinations. | Phase 1 |
+| `search` | **Narrow-target backstop.** Use for specific named pages / one-off phrases that don't fit a `page_type` / `tag` AND didn't surface via `browse_wiki(search_text=...)`. Per the MCP authors' own guidance: do NOT use search as the primary discovery tool — it misses connective data the browse path surfaces. | Phase 1 (backstop) |
 | `batch_fetch` | Read content. **EXACTLY one item per call.** N separate calls for N items, fired in parallel. Never pack multiple IDs into one call's args. If a call accidentally spilled (multi-item attempt), retry that item with a single-item call — do not abandon. | Phase 1 |
 | `remember` | Save a fact, preference, or correction. | Phases 2 to 5 |
 | `start_file_upload` | Upload URL for ingesting a customer file. | Step 3c |

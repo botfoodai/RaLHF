@@ -36,7 +36,21 @@ Rules that demand task-input clarifications ("never propose structure until a br
 
 ## Step 2: Call `get_wiki_catalog`
 
-Returns the grouped table of contents of the customer's wiki.
+Returns wiki orientation — narrative summary, total page count, per-type counts, top tags, top namespaces, last-updated timestamp, and **the top ~5 pages per page_type by source-count / recency**.
+
+### What the catalog IS good for
+
+- The **narrative summary** (one paragraph describing what the wiki contains overall) — used in the greeting and Phase 0a triage.
+- The **stats** (`total_pages`, `by_type` counts, `top_tags`, `top_namespaces`, `last_page_updated_at`) — these are exhaustive and accurate.
+- The **top ~5 pages per type** — useful as a "what does this user have a lot of?" signal and a starting set of candidate page IDs.
+
+### What the catalog is NOT
+
+**The catalog page lists are TRUNCATED — typically to 5 pages per type when the type has more than 5 pages.** A wiki with 939 pages may return only ~21 pages in the catalog response (the top-5 per type plus the comparison type). The remaining ~98% of pages are invisible from the catalog alone.
+
+**This means the catalog is NOT the discovery surface.** It is the orientation map. To reach the long tail in Phase 1, use `browse_wiki` aggressively with combined filters (`page_type + tag + search_text`) and pagination (`offset` + `limit=100`). See `references/discover.md` Step 3 for the workhorse pattern.
+
+If you find yourself picking only from the catalog's top-5-per-type and ignoring the long tail, you're missing 90%+ of the wiki. `browse_wiki(page_type=<type>, search_text=<task-keyword>)` is the way past that.
 
 ## Apply the playbook silently throughout the session
 
