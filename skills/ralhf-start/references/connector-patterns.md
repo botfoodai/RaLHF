@@ -46,7 +46,8 @@ When deciding whether to mention a connector in Turn 2b, map task shape to categ
 | Continuing a series (newsletter, weekly update, sprint recap) | Docs/Drive + Email | Prior drafts + prior sends |
 | Anything referencing a date, booking, confirmation | Email + Calendar | Source of truth for bookings |
 | Coding / PR / spec / ticket work | PM/issue tracker + Docs/Drive + Code-host | Task detail + prior discussion + code state |
-| Financial / accounting work | Accounting + Email | Invoices, reports, correspondence |
+| **Investor / fundraising / pitch deck / one-pager** | **Accounting + Email + Drive + Calendar** | Live financials (cash, burn, runway) + recent investor threads + prior pitch materials + recent investor meetings. ALL FOUR are usually relevant — narrow to top 2 by what's freshest, but enumerate all four when planning the ask. |
+| Financial / accounting / budgeting (internal use) | Accounting + Email | Invoices, reports, correspondence |
 | CRM / sales / customer-facing | CRM + Email + Calendar | Account history + correspondence + meetings |
 | Research / web-based lookup | Browser | Live web access |
 | Personal task with no external artifact (meal, workout, home errand) | Usually none | Mode C minimum 2c — *"anything else?"* |
@@ -55,4 +56,6 @@ Walk the two steps:
 1. **Match the task shape** to a category from the right column.
 2. **Match the category to a verified-present server** in this session's MCP inventory. If the category has a match, mention that specific server in Turn 2b. If it doesn't, drop the connector mention or use the "if you connect X next time" soft suggestion (one-shot only).
 
-**Cap connector mentions at 2 across all of Turn 2b** even if more are present. Top two that most directly fill gaps or add depth.
+**Enumerate before narrowing.** For task shapes that map to multiple connector categories (investor / fundraising, CRM / sales, coding work), **first list ALL plausibly-relevant connector categories** that are verified-present in this session. Then narrow to the top 2 for the mode A ask. Skipping the enumeration step is how the model misses obvious connectors — e.g., picking QuickBooks + Gmail for an investor one-pager but forgetting Drive (which holds the actual prior pitch decks). The enumeration step is the safety net against partial pattern-matching.
+
+**Cap connector mentions at 2 across all of Turn 2b** even if more are present. Top two that most directly fill gaps or add depth. **But:** if 3+ are clearly relevant (named failure mode: investor one-pager with QB + Gmail + Drive all relevant), prefer mode B (open-ended check listing all relevant connectors) over mode A (pick 2, miss 1). Mode B's open-ended ask is the right shape when 3+ are plausibly important.

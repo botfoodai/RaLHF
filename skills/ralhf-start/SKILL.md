@@ -93,11 +93,11 @@ Call `get_instructions`, `get_wiki_catalog`. Glob the local folder. Call `browse
 >   - Business overview and current entity profile
 >
 > **2. Documents from your personal context library**
-> - **[Q1 2026 Quarterly Update](https://app.ralhf.ai/my-content?fileId=...)** (Apr 3, 2026)
+> - **[Q1 2026 Quarterly Update.docx](https://app.ralhf.ai/my-content?fileId=...)** (Apr 3, 2026)
 >   - Canonical Q1 narrative, financials, customer growth
-> - **[Bot Food Brand Guidelines v3.9](https://app.ralhf.ai/my-content?fileId=...)** (May 3, 2026)
+> - **[Bot Food Brand Guidelines v3.9.pdf](https://app.ralhf.ai/my-content?fileId=...)** (May 3, 2026)
 >   - Current brand spec, colors, fonts
-> - **[2026 OKRs](https://app.ralhf.ai/my-content?fileId=...)** (Jan 6, 2026)
+> - **[2026 OKRs.docx](https://app.ralhf.ai/my-content?fileId=...)** (Jan 6, 2026)
 >   - Company OKRs feeding the board narrative
 >
 > **3. Documents from the Cowork folder**
@@ -244,7 +244,7 @@ Retrieval is structured by what Turn 2a needs to produce. The four sections each
 **Section 2 prerequisite — personal context library:**
 1. Section 2 is populated from the `sources[]` arrays of the wiki pages fetched in Section 1's prerequisite step. Same `batch_fetch` calls — no separate retrieval pass needed.
 2. For each fetched wiki page, triage its `sources[]` array. Select the task-relevant source documents.
-3. List the selected sources as flat bullets in Section 2. A given source document appears once, regardless of how many wiki pages reference it.
+3. List the selected sources as flat bullets in Section 2. **Render each item using the `filename` field from the source object — verbatim, with extension** (e.g. `Q1 2026 Quarterly Update.docx`, not `Q1 2026 Quarterly Update`). If `sources[]` returns both `title` and `filename`, the filename always wins. Only fall back to `title` if no filename field exists for that source. A given source document appears once, regardless of how many wiki pages reference it.
 4. If a source document is ALSO present in the Cowork folder (Section 3), list it in BOTH sections. The duplication is signal — it shows the document is referenced from the wiki AND exists locally.
 5. If no fetched wiki page has any task-relevant sources, Section 2 shows the "No task-relevant library documents" status line.
 
@@ -502,6 +502,12 @@ For example asks and the suggestion rules, see `references/connectors.md`.
 
 ### Step 3b: final pre-handoff check-in (always fires)
 
+**Pre-flight (mandatory before composing Step 3b):**
+1. **Did Step 3a fire on this task?** Inventory the non-RaLHF MCP servers verified-present in this session's tool surface. If non-empty AND Step 3a has not yet run, **STOP — go back and run Step 3a (mode A or B) before composing this check-in.** Composing the green-light ask without Step 3a having fired is a hard FAIL (see `references/key-rules.md` §1.10.b and `references/connectors.md`). Compression rules in `personalized` do NOT override this — they govern the shape of Step 3a's ask, not whether it runs.
+2. **Did Step 3c fire if the source-promotion queue is non-empty?** Same logic — if there's a queue and Step 3c hasn't run, do that first.
+
+Only after both pre-flight items resolve, compose Step 3b.
+
 **HARD CAP: 25 words total. Maximum 2 pieces named.** This is a check-in, not a recap. The customer just saw the inventory in Turn 2a. They don't need every item re-listed. Two parts only:
 
 1. **One-line affirmation.** Name the task plus AT MOST two strongest anchors. Not every piece. Counting rule: if your draft names 3+ pieces from the package, cut it.
@@ -622,7 +628,7 @@ For details, see `references/remember.md`.
 
 These apply in every phase. Honor them without needing to load a reference:
 
-1. **Documents are RaLHF's lane.** Don't execute the task. Don't give opinions. Don't ask task-input questions.
+1. **Documents are RaLHF's lane.** Don't execute the task. Don't give opinions. **Don't ask task-input questions.** The test before posing ANY question: *"Could Claude ask this while drafting the output, with the context I've already assembled?"* If yes — it's a task input (date, time, guest count, slide count, audience, tone, deadline, venue, recipient, etc.) and belongs to Claude in Phase 4. Drop it. Five-question intake forms ("when / where / how many / budget / venue") are the named failure mode — see `references/key-rules.md` §1.11.
 2. **No personal-detail probes.** Don't ask about feelings, motivations, mental state, relationship dynamics.
 3. **No internal labels in customer-facing dialogue.** Phase 0, Turn 2a, Step 3a, mode A are doc-internal. The customer never sees them.
 4. **One call-to-action per message.** Never stack multiple asks into one wall.

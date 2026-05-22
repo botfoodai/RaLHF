@@ -25,7 +25,7 @@ Each item is required, not optional.
 - [ ] Does each section either have items OR a one-line empty-section status line? See "Empty section status" below for exact wording.
 - [ ] **For each wiki page in Section 1, did I `batch_fetch` it with ONE item per call?** A wiki page that has not been fetched cannot appear. If a fetch call spilled because I batched multiple items, did I retry with single-item calls?
 - [ ] **Did I populate Section 2 from the `sources[]` arrays of the fetched wiki pages?** Task-relevant source documents go in Section 2 as flat bullets. A document that's also in Section 3 (Cowork folder) appears in BOTH — duplication is signal.
-- [ ] Is every top-level item in the strict two-line bullet format: `- **<filename or title>** (<date>)` on line 1, two-space indented short description on line 2? No em dashes anywhere. No `—` separator between filename and description. No single-line bullets. Wiki page titles can be markdown-linked.
+- [ ] Is every top-level item in the strict two-line bullet format: `- **<filename or title>** (<date>)` on line 1, two-space indented short description on line 2? No em dashes anywhere. No `—` separator between filename and description. No single-line bullets. **Section 1 uses the wiki page title (markdown-linked). Sections 2 and 3 use the actual filename** — for Section 2 in particular, NEVER use the human-readable title from `sources[]` when a filename field exists; use the filename verbatim with its extension (e.g. `Q1 2026 Quarterly Update.docx`, not `Q1 2026 Quarterly Update`).
 - [ ] **Is every item a SINGLE document?** No combined entries like `v2.4.pptx + v2.4-context.md`. No "Logo A, Logo B, Logo C" entries. If three related files belong in the inventory, give them three separate bullets.
 - [ ] **Is every description 12 words or fewer?** Tell the customer what the document IS, not what it says.
 - [ ] **Are descriptions document descriptions ONLY?** No version-comparison notes ("newer than X", "may be behind Y"), no staleness flags, no cross-document commentary. Comparisons and staleness go in Turn 2b. Example: ✗ "Latest brand spec, newer than local v3.6" / ✓ "Latest brand spec, colors and fonts".
@@ -84,7 +84,10 @@ All three document sections (1, 2, 3) use the same two-line bullet format:
   <very short description, 5 to 12 words>
 ```
 
-- Line 1: bolded filename or wiki page title (linked to URL when available). Date in parentheses.
+- Line 1: bolded identifier (linked to URL when available). Date in parentheses. **Which identifier:**
+  - **Section 1 (wiki):** wiki page title, markdown-linked to the page URL.
+  - **Section 2 (library):** the **filename** from `sources[]` — verbatim, with extension. NOT the human-readable `title` field. If `sources[]` returns both `title` and `filename`, always pick `filename`. Only fall back to `title` if no filename is available for that source.
+  - **Section 3 (Cowork folder):** the actual filename on disk, with extension.
 - Line 2: indented, brief description. Aim for 5 to 12 words. Tell the customer what the document IS, not what it says.
 
 When the description is short enough, collapse to one line:
@@ -118,6 +121,7 @@ Vary the phrasing every fire. The closing IS the amendment ask. If the customer 
 - "Once you confirm, I'll ask if anything's missing or should come out." — previews a redundant future ask.
 - "After this I'll ask if anything should be added or removed, then we can decide on connectors." — wasted text, ask the question now.
 - "What's the brief?" / "Which direction are we going?" — task-input questions, those are Claude's.
+- **A bulleted list of clarifying questions of any kind** ("Who is it for? / When? / How many guests? / Where? / Budget?"). The amendment ask is ONE short sentence asking if the inventory looks right; it is NOT a slot to interrogate the customer for task inputs. See `references/key-rules.md` §1.11 — task-input questions belong to Claude in Phase 4, never to RaLHF. If the wiki is empty on this topic, present empty-section statuses and ask if there's a wiki page they'd like added — NOT a five-question intake form.
 
 ## Full format example
 
@@ -153,7 +157,7 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
 
 ## Rules for the findings list
 
-- **Use the real filename when one exists.** Library documents and Cowork folder files have filenames; use them. Wiki pages don't have filenames; use the page title instead.
+- **Section 2 and Section 3 always render the filename, never the title.** Library documents (`sources[]`) and Cowork folder files both have filenames — render them verbatim, with extension (e.g. `Brand Guidelines v3.9.pdf`, not `Brand Guidelines`). When `sources[]` returns both a `title` and a `filename`, the filename always wins. Only fall back to the title when no filename field exists at all (rare). Wiki pages (Section 1) don't have filenames; use the page title there instead.
 - **Link the filename or title** to its URL when one is available. The wiki catalog always returns a `url` per page. Never fabricate a URL.
 - **Date is the last-modified date** in `<Mon D, YYYY>` format. For wiki pages use `last_updated_at`. For library and Cowork files use the file's modified date. If the date is unknown, write `undated`.
 - **Descriptions are very short.** 5 to 12 words. Describe what the document is, not what it says.
@@ -171,6 +175,7 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
 - **Multi-item `batch_fetch` calls.** Always one item per call. Multi-item calls spill. If you spilled, retry one-at-a-time.
 - **Silent dedup between Section 2 and Section 3.** A document that exists in both places appears in both sections. Duplication is signal.
 - **Em dashes as separators between filename and description.** `**filename** (date) — description` is banned. Use the two-line format: filename and date on line 1, description indented on line 2.
+- **Using the human-readable `title` field for Section 2 items when a `filename` is available.** Library source documents must render with their filename (extension included). Falling back to the title because it "reads nicer" is the named failure mode — the customer needs to know which actual file is being pulled, not a rephrased label.
 - **Single-line bullets.** Every top-level item is two lines. Filename and date on line 1, description on line 2.
 - **Combined entries.** "Logo A, Logo B, Logo C" or "v2.4.pptx + v2.4-context.md" packs multiple files into one bullet. Each file gets its own bullet.
 - **Old-style section headers.** "Pages from your RaLHF Wiki", "From the local Marketing folder", "From Claude's memory". The new headers are numbered and exact.
