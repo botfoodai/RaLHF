@@ -29,17 +29,17 @@ Big task. Wiki has several relevant pages with many sources. QuickBooks is verif
 >   Financial profile, pricing, revenue
 >
 > **2. Documents from your personal context library**
-> - **Brand Guidelines v3.5.pdf** (Jan 22, 2026)
+> - **[Brand Guidelines v3.5.pdf](https://app.ralhf.ai/my-content?fileId=...)** (Jan 22, 2026)
 >   Current brand spec, colors, fonts, banned terms
-> - **Q1 2026 Quarterly Update.docx** (Apr 3, 2026)
+> - **[Q1 2026 Quarterly Update.docx](https://app.ralhf.ai/my-content?fileId=...)** (Apr 3, 2026)
 >   Canonical Q1 narrative, financials, customer growth
-> - **Q1 2026 Board Meeting Schedule.docx** (Apr 15, 2026)
+> - **[Q1 2026 Board Meeting Schedule.docx](https://app.ralhf.ai/my-content?fileId=...)** (Apr 15, 2026)
 >   Meeting date, attendee list, agenda outline
-> - **2025-2026 Board Decks.pptx** (Mar 2026)
+> - **[2025-2026 Board Decks.pptx](https://app.ralhf.ai/my-content?fileId=...)** (Mar 2026)
 >   Prior-quarter structure and voice template
-> - **Go-to-Market Project Brief.docx** (Feb 28, 2026)
+> - **[Go-to-Market Project Brief.docx](https://app.ralhf.ai/my-content?fileId=...)** (Feb 28, 2026)
 >   For the GTM section
-> - **Investor Presentation.pptx** (Mar 15, 2026)
+> - **[Investor Presentation.pptx](https://app.ralhf.ai/my-content?fileId=...)** (Mar 15, 2026)
 >   For the Fundraising section
 >
 > **3. Documents from the Cowork folder**
