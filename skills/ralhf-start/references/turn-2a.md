@@ -86,7 +86,7 @@ All three document sections (1, 2, 3) use the same two-line bullet format:
 
 - Line 1: bolded identifier (linked to URL when available). Date in parentheses. **Which identifier and link:**
   - **Section 1 (wiki):** wiki page title, **markdown-linked** to the page URL from the catalog.
-  - **Section 2 (library):** the **filename** from `sources[]` — verbatim, with extension. NOT the human-readable `title` field. If `sources[]` returns both `title` and `filename`, always pick `filename`. Only fall back to `title` if no filename is available for that source. **Markdown-link the filename to the source URL** — `sources[]` returns a `url` for each item (typically `https://app.ralhf.ai/my-content?fileId=...` or similar). Always link it. Unlinked Section 2 items are a regression — the customer needs to click through to open the document.
+  - **Section 2 (library):** the **`filename` field** from each `sources[]` item — rendered **verbatim, character-for-character, with extension**. Do NOT humanize: preserve underscores (don't replace with spaces), preserve the extension, preserve original capitalization, preserve dashes and parentheses. Example: `Bot Food - One Pager v2.8.pdf` stays as `Bot Food - One Pager v2.8.pdf`; `Q1_2026_Quarterly_Update.docx` stays as `Q1_2026_Quarterly_Update.docx`. The `title` field is humanized — use it ONLY as a fallback if `filename` is genuinely absent from the source object (rare). **Markdown-link the filename to the source URL** — `sources[]` returns a `url` for each item (typically `https://app.ralhf.ai/my-content?fileId=...`). Always link it.
   - **Section 3 (Cowork folder):** the actual filename on disk, with extension. Local files don't have URLs — leave unlinked unless the file maps to a Drive pointer.
 - Line 2: indented, brief description. Aim for 5 to 12 words. Tell the customer what the document IS, not what it says.
 
@@ -135,11 +135,11 @@ After searching through your context, here's what I think is most relevant for t
   Business overview and current entity profile
 
 **2. Documents from your personal context library**
-- **[Q1 2026 Quarterly Update.docx](https://app.ralhf.ai/my-content?fileId=...)** (Apr 3, 2026)
+- **[Q1_2026_Quarterly_Update.docx](https://app.ralhf.ai/my-content?fileId=...)** (Apr 3, 2026)
   Canonical Q1 narrative, financials, customer growth
-- **[Brand Guidelines v3.9.pdf](https://app.ralhf.ai/my-content?fileId=...)** (May 3, 2026)
+- **[Bot Food - Brand Guidelines v3.9.pdf](https://app.ralhf.ai/my-content?fileId=...)** (May 3, 2026)
   Current brand spec, colors, fonts
-- **[2026 OKRs.docx](https://app.ralhf.ai/my-content?fileId=...)** (Jan 6, 2026)
+- **[2026_OKRs.docx](https://app.ralhf.ai/my-content?fileId=...)** (Jan 6, 2026)
   Company OKRs feeding the board narrative
 
 **3. Documents from the Cowork folder**
@@ -157,7 +157,7 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
 
 ## Rules for the findings list
 
-- **Section 2 and Section 3 always render the filename, never the title.** Library documents (`sources[]`) and Cowork folder files both have filenames — render them verbatim, with extension (e.g. `Brand Guidelines v3.9.pdf`, not `Brand Guidelines`). When `sources[]` returns both a `title` and a `filename`, the filename always wins. Only fall back to the title when no filename field exists at all (rare). Wiki pages (Section 1) don't have filenames; use the page title there instead.
+- **Section 2 and Section 3 always render the filename, never the title — and they render it VERBATIM.** Library documents (`sources[]`) and Cowork folder files both have filenames. Render them character-for-character, with extension. Preserve underscores (do NOT replace with spaces), preserve original capitalization, preserve dashes and parentheses, preserve the extension. `Bot Food - One Pager v2.8.pdf` stays as `Bot Food - One Pager v2.8.pdf`; `Q1_2026_Quarterly_Update.docx` stays as `Q1_2026_Quarterly_Update.docx`. When `sources[]` returns both a `title` and a `filename`, the filename always wins. Only fall back to the title when no filename field exists at all (rare). Wiki pages (Section 1) don't have filenames; use the page title there instead.
 - **Link the filename or title** to its URL when one is available. Per-section guidance:
   - **Section 1 (wiki):** the catalog always returns a `url` per page. ALWAYS link.
   - **Section 2 (library):** `sources[]` returns a `url` for every source document (typically a `https://app.ralhf.ai/my-content?fileId=...` form pointing at the library document viewer). ALWAYS link. Unlinked Section 2 items are the named regression — the customer needs to click through to open the doc, and the worked examples in this file model the linked form.
@@ -180,7 +180,8 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
 - **Multi-item `batch_fetch` calls.** Always one item per call. Multi-item calls spill. If you spilled, retry one-at-a-time.
 - **Silent dedup between Section 2 and Section 3.** A document that exists in both places appears in both sections. Duplication is signal.
 - **Em dashes as separators between filename and description.** `**filename** (date) — description` is banned. Use the two-line format: filename and date on line 1, description indented on line 2.
-- **Using the human-readable `title` field for Section 2 items when a `filename` is available.** Library source documents must render with their filename (extension included). Falling back to the title because it "reads nicer" is the named failure mode — the customer needs to know which actual file is being pulled, not a rephrased label.
+- **Using the human-readable `title` field for Section 2 items when a `filename` is available.** Library source documents must render with their `filename` field (extension included). Falling back to the title because it "reads nicer" is the named failure mode — the customer needs to know which actual file is being pulled, not a rephrased label. The `sources[]` data has BOTH fields; pick `filename`.
+- **Humanizing the filename when rendering Section 2.** The model's instinct to strip underscores, strip extensions, or title-case the filename is wrong here. If the `filename` field is `Q1_2026_Quarterly_Update.docx`, the rendered text is `Q1_2026_Quarterly_Update.docx` — not `Q1 2026 Quarterly Update`, not `Q1 2026 Quarterly Update.docx`, not `q1_2026_quarterly_update.docx`. Verbatim means verbatim. (The customer's live test in v3.7.1 caught this — Section 2 items were rendering as `RaLHF Product Overview and Investment Pitch` when the actual `filename` was `Bot Food - One Pager v2.8.pdf`.)
 - **Rendering Section 2 items WITHOUT a markdown link.** `sources[]` returns a `url` for every library document. Unlinked Section 2 items are a regression — the customer cannot click through to open the doc. The bold-filename form `- **Brand Guidelines v3.9.pdf** (May 3, 2026)` is wrong for Section 2; use `- **[Brand Guidelines v3.9.pdf](<url>)** (May 3, 2026)` instead. Section 3 (local Cowork files) stays unlinked because local paths have no URL.
 - **Single-line bullets.** Every top-level item is two lines. Filename and date on line 1, description on line 2.
 - **Combined entries.** "Logo A, Logo B, Logo C" or "v2.4.pptx + v2.4-context.md" packs multiple files into one bullet. Each file gets its own bullet.

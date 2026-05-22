@@ -93,11 +93,11 @@ Call `get_instructions`, `get_wiki_catalog`. Glob the local folder. Call `browse
 >   - Business overview and current entity profile
 >
 > **2. Documents from your personal context library**
-> - **[Q1 2026 Quarterly Update.docx](https://app.ralhf.ai/my-content?fileId=...)** (Apr 3, 2026)
+> - **[Q1_2026_Quarterly_Update.docx](https://app.ralhf.ai/my-content?fileId=...)** (Apr 3, 2026)
 >   - Canonical Q1 narrative, financials, customer growth
-> - **[Bot Food Brand Guidelines v3.9.pdf](https://app.ralhf.ai/my-content?fileId=...)** (May 3, 2026)
+> - **[Bot Food - Brand Guidelines v3.9.pdf](https://app.ralhf.ai/my-content?fileId=...)** (May 3, 2026)
 >   - Current brand spec, colors, fonts
-> - **[2026 OKRs.docx](https://app.ralhf.ai/my-content?fileId=...)** (Jan 6, 2026)
+> - **[2026_OKRs.docx](https://app.ralhf.ai/my-content?fileId=...)** (Jan 6, 2026)
 >   - Company OKRs feeding the board narrative
 >
 > **3. Documents from the Cowork folder**
@@ -365,11 +365,17 @@ Wiki pages and library documents have URLs in their metadata, so render the iden
 ```
 
 - **Section 1 (wiki pages):** link text is the page title from the catalog. URL is the wiki page URL. Date prefix is "updated".
-- **Section 2 (personal context library docs):** link text is the source's `title` field from `sources[]` metadata. URL is the source's `url` field (typically `https://app.ralhf.ai/my-content?fileId=<id>`). Use the source's `updated_at` date.
+- **Section 2 (personal context library docs):** link text is the source's **`filename`** field from `sources[]` metadata — rendered **verbatim, character-for-character, with extension**. URL is the source's `url` field (typically `https://app.ralhf.ai/my-content?fileId=<id>`). Use the source's `updated_at` date.
 
-Note: the `sources[]` metadata does not currently include a structured `filename` field. Use the title as the link text. When the backend adds a filename field in the future, the spec will switch to actual filename + extension as the link text.
+**Render the filename VERBATIM.** Do NOT humanize. Do NOT replace underscores with spaces. Do NOT strip the extension. Do NOT title-case. Do NOT clean up punctuation. The customer wants to see the file exactly as it exists in their library — `Q1_2026_Quarterly_Update.docx` stays as `Q1_2026_Quarterly_Update.docx`, not `Q1 2026 Quarterly Update`. `Bot Food - One Pager v2.8.pdf` stays as `Bot Food - One Pager v2.8.pdf`. Whatever string is in the `filename` field, that's the link text — exactly.
 
-If a URL is genuinely unavailable (rare), render without the link rather than fabricating one: `- **title** (date)`. Never invent a URL.
+**Field precedence for the link text:**
+1. `filename` field (use if present — always preferred)
+2. `title` field (humanized fallback — use ONLY when `filename` is genuinely absent from the source object)
+
+The backend reliably populates `filename` for source documents today (confirmed by inspecting actual `sources[]` responses). Earlier versions of this spec said the filename field didn't exist; that's no longer true. If you see a source without a `filename` field, the data is genuinely missing it — fall back to `title`.
+
+If a URL is genuinely unavailable (rare), render without the link rather than fabricating one: `- **filename.ext** (date)`. Never invent a URL.
 
 ### Format for Section 3 (Cowork folder — plain filenames, no link)
 
