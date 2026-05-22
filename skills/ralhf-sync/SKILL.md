@@ -1,6 +1,6 @@
 ---
-name: sync-back
-description: Sync what was learned in this conversation back to RaLHF. Saves new preferences, corrections, and a conversation summary so future sessions are more personalized.
+name: ralhf-sync
+description: This skill should be used when the customer wants to manually save what was learned in the current session back to RaLHF. Trigger phrases include "/ralhf-sync", "sync back", "save what we learned", or any request to persist session learnings before the conversation ends.
 ---
 
 # Sync Back — Save Conversation Learnings to RaLHF
@@ -9,7 +9,7 @@ The user wants to sync what was learned during this conversation back to RaLHF.
 
 ## What to do
 
-Follow the Phase 5 (Remember) protocol from the `prep-context` skill:
+Follow the Phase 5 (Remember) protocol from the `ralhf-start` skill:
 
 ### 1. Review the conversation
 

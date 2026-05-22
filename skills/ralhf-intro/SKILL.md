@@ -90,10 +90,10 @@ Two short paragraphs. Name the three sources explicitly — bold them so they po
 >
 > Before Claude does anything substantive — writing, planning, coding, deciding — I assemble a context package from three places: your **RaLHF library**, **local files** in your project, and **connectors enabled in Claude** (Gmail, Calendar, Drive…). You confirm it, Claude executes from your reality instead of generic advice.
 >
-> Automatic on every task. If I don't fire, type `/prep-context`.
+> Automatic on every task. If I don't fire, type `/ralhf-start`.
 
 **Do NOT include:**
-- A slash-commands table (`/learn`, `/sync-back`, `/feed-ralhf`, `/ralhf-intro`) — leave them for users to discover, the table bloats the intro.
+- A slash-commands table (`/ralhf-learn`, `/ralhf-sync`, `/feed-ralhf`, `/ralhf-intro`) — leave them for users to discover, the table bloats the intro.
 - The "personal context engineer" label — drop it; the description above carries the meaning.
 - A "every answer is grounded in what Claude already knows about *you*" repeat — already in the opener.
 
@@ -112,7 +112,7 @@ One bullet, one example pair, then the warm offer-style close. Keep it to ~2 sen
 - Restate the value prop in the same beat (e.g. *"I'll make sure Claude shows up with the right context"*) so the closing isn't just a prompt — it's a small re-promise of what RaLHF does.
 - No question mark. No "?".
 
-**Do NOT include** a "drop a `/learn <something>` to feel the loop close" nudge — it competes with "just ask normally" and dilutes the primary path. Keep examples generic (no "board update" / "investor deck" — not everyone has those).
+**Do NOT include** a "drop a `/ralhf-learn <something>` to feel the loop close" nudge — it competes with "just ask normally" and dilutes the primary path. Keep examples generic (no "board update" / "investor deck" — not everyone has those).
 
 Keep the closing brief. The user should feel oriented, not lectured.
 

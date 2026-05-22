@@ -52,7 +52,7 @@ ZIP_PATH="$DIST/$ZIP_NAME"
 REQUIRED=(
   ".claude-plugin/plugin.json"
   ".mcp.json"
-  "skills/prep-context/SKILL.md"
+  "skills/ralhf-start/SKILL.md"
   "hooks/hooks.json"
   "LICENSE"
   "NOTICE"
