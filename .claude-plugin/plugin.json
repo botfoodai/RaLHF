@@ -1,6 +1,6 @@
 {
   "name": "ralhf",
-  "version": "3.8.3",
+  "version": "3.8.4",
   "description": "RaLHF is a context selection assistant. It works alongside the customer to find the maximum relevant context for whatever task Claude is about to take on. Skills: ralhf-start (auto-fires on new tasks), ralhf-learn, ralhf-sync, ralhf-intro, feed-ralhf. Production deployment — points at backend.ralhf.ai. GENERATED from plugins/ralhf-dev/ via scripts/sync-plugin-variants.py.",
   "author": {
     "name": "Bot Food Corporation"

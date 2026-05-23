@@ -574,31 +574,57 @@ If the package includes safety-critical content (allergy, medication, medical re
 
 ### Step 3c: library refresh ask
 
-Pre-flight: was anything new used in the package that isn't already in the customer's RaLHF Library? Treat each of these as a queue entry:
+Pre-flight: was anything new used in the package that isn't already in the customer's RaLHF Library? Treat each of these as a queue entry. Bucket letters match `references/final-checkin-and-refresh.md`:
 
-- **(a)** Files / threads / events returned by any non-RaLHF connector query (Gmail thread, Drive file, Calendar event, Jira issue, Chrome browser page pull, etc.).
-- **(b)** Local file paths or URLs the customer pasted into the conversation, OR files the customer pointed at during Turn 2b that RaLHF then fetched, OR files in parent / sibling folders outside the Cowork mount that became part of the package.
+- **(a)** Local file paths or URLs the customer pasted into the conversation, OR files the customer pointed at during Turn 2b that RaLHF then fetched, OR files in parent / sibling folders outside the Cowork mount that became part of the package.
+- **(b)** Files / threads / events returned by any non-RaLHF connector query (Gmail thread, Drive file, Calendar event, Jira issue, Chrome browser page pull, etc.).
 - **(c)** **Local Cowork-folder files RaLHF read and judged useful for the context package** — anything from the Cowork enumeration that survived triage and landed in Turn 2a's Section 3 ("Documents from the Cowork folder"). If the file was material enough to appear in Section 3, it goes in the queue. **Drive-mounted Cowork folders** (Google Drive Cowork mounts) take the Drive pointer-only action (see source-type table in `references/final-checkin-and-refresh.md`), NOT the local-file bytes upload — but they still go in the queue.
+- **(e)** **Claude memory items surfaced in Section 4 of Turn 2a** — facts, preferences, or notes Claude has stored locally that informed the package. The RaLHF Library is the canonical durable store; Claude memory is the working copy. Promoting Section 4 items to RaLHF means future sessions get them without needing Claude's local memory to be carried over.
+
+(Bucket **(d)** is task artifacts — saved in Phase 5 Step 1.5 AFTER Claude executes and the customer approves the output, not at Step 3c. See `references/remember.md`.)
 
 **If the queue is non-empty, the ask fires.** Cover ALL queue entries in the single ask, not just the most recent.
 
-**Clarification on what counts as queue-non-empty:**
+**Hard dedup — applied at queue-insert AND at save time:**
 
-- ANY Gmail/Drive/Chrome/Calendar/Jira fetch that returned content during the session = queue non-empty.
-- ANY local Cowork file RaLHF read and put in Section 3 of Turn 2a = queue non-empty. Cowork-folder files are **not** in the Library by default — every Section 3 item is a candidate for promotion to the Library so future sessions have it without re-discovery.
-- Even if the content turns out to already be wiki-indexed, the ask still fires — the customer should decide whether to save the pointer to the specific thread/file/event, not RaLHF.
-- The threshold is "I used it in the package," not "the content is novel."
-- If you queried Gmail at all in Step 3a and got any thread back, OR if Section 3 of Turn 2a has any items in it, Step 3c MUST fire.
+Every queue candidate is checked against the Library BEFORE it lands in the queue. If it's already there, drop it — do NOT include it in the ask, do NOT save it on "yes". Dedup keys (in priority order):
 
-Format: "Before I hand off, want me to save what we gathered to your RaLHF Library so it's there next time? I'd save pointers to <N> Drive files, the Gmail thread context, and upload <M> files from your Cowork folder. (yes/no)"
+| Source type | Dedup key |
+|---|---|
+| **Local file** | path + size + mtime |
+| **Drive file** (incl. Drive-mounted Cowork) | Drive file ID |
+| **Web URL** | normalized URL (strip trailing slash, lowercase host, drop tracking params like `utm_*`, `ref=`) |
+| **Connector finding** | thread / event / issue ID |
+| **Claude memory item** | `source_description` substring + content keyword overlap (since memory items are facts, not files) |
 
-**Show post-dedup counts only.** When some items are already in the Library (per `get_wiki_catalog` or existing `remember` entries with matching `source_description`), skip them from the ask — never claim "save 6 pointers" if 5 are already saved.
+**Check against:**
+- `get_wiki_catalog` results from Phase 0 (catalog stats + top-5 per type)
+- Existing `remember` entries with matching `source_description` (use `browse_wiki(search_text=<id-or-key>)` or `search(query=<key>)` if needed to confirm a specific item is in the Library)
+- For Claude memory items: check whether a matching fact already exists in the wiki (a profile page, an entity page, or a `remember`'d item) — if yes, skip; if no, promote
+
+When the Library doesn't expose IDs cleanly, default to **skip-on-title-match** rather than risk a duplicate. **Show post-dedup counts only.** Never claim "save 6 pointers" if 3 of them are already in the Library — say "save 3 pointers (3 already in your Library)" or just "save 3 pointers" and drop the parenthetical when dedup count is 0 or 1.
+
+**Clarification on what counts as queue-non-empty (post-dedup):**
+
+- ANY Gmail/Drive/Chrome/Calendar/Jira fetch that returned content during the session, AND that content isn't already saved → queue non-empty.
+- ANY local Cowork file RaLHF read and put in Section 3 of Turn 2a, AND that file isn't already in the Library → queue non-empty. Cowork-folder files are **not** in the Library by default.
+- ANY Claude memory item surfaced in Section 4 of Turn 2a, AND there's no matching wiki page / `remember`'d fact → queue non-empty.
+- The threshold is "I used it in the package, AND it's not already saved."
+
+If post-dedup count is 0 (everything is already in the Library), skip Step 3c entirely and go straight to handoff.
+
+Format: "Before I hand off, want me to save what we gathered to your RaLHF Library so it's there next time? I'd upload <M> files from your Cowork folder, save pointers to <N> Drive files and the Gmail thread context, and save <K> memory items as facts. (yes/no)"
+
+Drop any clauses where the post-dedup count is 0. If only one bucket has entries, the ask shrinks to one clause: *"...save pointers to 2 Drive files. (yes/no)"*
 
 On yes: silent ingest per source type:
 - **Local Cowork files (truly local, not Drive-mounted)**: `start_file_upload` POST → `check_file_upload_status` (bytes upload).
 - **Drive files / Drive-mounted Cowork files**: `remember` with `source_description="Google Drive: <title>"` + substantive 1–2 sentence summary + key facts (pointer-only — Drive is canonical, uploads stale).
 - **Website URLs**: `remember` with `source_description="Web: <url>"` + key facts.
 - **Connector findings** (Gmail thread, Calendar event, Jira issue): `remember` the durable fact, not the full thread.
+- **Claude memory items**: `remember` with `source_description="Memory: <topic>"` + the fact verbatim or lightly condensed. Optional `dimension` if it maps to a life area (`food_and_dining`, `work_and_learning`, etc.). Memory items are typically short — render them substantively, not as a one-word summary.
+
+**Re-run dedup at save time.** If a session-end check shows a queued item is now in the Library (e.g. a parallel session saved it), skip the save for that item. Better to under-save than to duplicate.
 
 Brief one-line acknowledgment ("Saved, Library refreshed."), then handoff line.
 

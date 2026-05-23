@@ -72,8 +72,29 @@ The source-promotion queue is populated throughout Phases 1–2 by:
 - **(a)** customer-volunteered paths / Drive links / URLs ("look at /path/to/spec.pdf", "check this URL"),
 - **(b)** connector-discovered files / threads / events that shaped the package (a Drive sweep that returned a file Claude read; a Gmail thread used as voice reference),
 - **(c)** **local Cowork-folder files RaLHF read and judged useful** — anything from the Cowork enumeration that survived triage and informed Turn 2a. **If the file was material enough to land in Turn 2a's "From the local Cowork folder" block, it goes in the queue.** Drive-mounted Cowork folders (Google Drive Cowork mounts) use the Drive pointer-only action, not the local-file upload — see the source-type table below.
+- **(e)** **Claude memory items surfaced in Section 4 of Turn 2a** — facts / preferences / notes Claude has stored locally that informed the package. The RaLHF Library is the canonical durable store; Claude memory is the working copy. Promote Section 4 items to RaLHF so future sessions get them without depending on Claude's local memory persisting.
 
-A second queue **(d)** is populated in Phase 4–5 by task artifacts Claude produced and the customer approved — that one fires in Phase 5 Step 1.5, not here.
+A second queue **(d)** is populated in Phase 4–5 by task artifacts Claude produced and the customer approved — that one fires in Phase 5 Step 1.5, not here. (The lettering skips from (c) to (e) for Step 3c specifically because (d) is reserved for the Phase 5 artifact queue.)
+
+### Dedup — applied at queue-insert AND at save time
+
+Every queue candidate is checked against the Library BEFORE it lands in the queue. If it's already there, drop it — do NOT include it in the ask, do NOT save it on "yes". Re-run the dedup check at save time too, in case parallel sessions saved something between Phase 1 and Step 3c.
+
+| Source type | Dedup key |
+|---|---|
+| **Local file** | path + size + mtime |
+| **Drive file** (incl. Drive-mounted Cowork) | Drive file ID |
+| **Web URL** | normalized URL (strip trailing slash, lowercase host, drop tracking params like `utm_*`, `ref=`) |
+| **Connector finding** | thread / event / issue ID |
+| **Claude memory item** | `source_description` substring + content keyword overlap (memory items are facts, not files — match against the substantive content, not just the title) |
+
+**Check against:** `get_wiki_catalog` results (catalog stats + top-5 per type), existing `remember` entries with matching `source_description`. When the Library doesn't expose IDs cleanly, default to **skip-on-title-match** rather than risk a duplicate. **Better to under-save than to duplicate.**
+
+For Claude memory items specifically: if a matching fact already exists in the wiki (a profile page, an entity page, or a `remember`'d item with overlapping content), skip; if no, promote.
+
+### If post-dedup count is 0
+
+Skip Step 3c entirely. Go straight to handoff. Don't fire an ask for "0 things to save."
 
 ### The ask
 
@@ -88,6 +109,7 @@ Run the queued ingestions silently:
 - Drive pointers → `remember(...)` per file with substantive summary
 - Web pointers → `remember(...)` per URL with key facts
 - Connector findings → `remember(...)` per durable fact
+- Claude memory items → `remember(...)` with `source_description="Memory: <topic>"` + fact content (verbatim or lightly condensed)
 
 Brief one-line acknowledgment ("Saved, Library refreshed."), then deliver the handoff line.
 
@@ -109,6 +131,7 @@ Hard guarantee: never re-upload a file that's already in the Library, never dupl
 | **Google Drive file** (incl. Drive-mounted Cowork folders) | Pointer-only, do NOT upload | `remember` with `source_description="Google Drive: <file title>"` |
 | **Website URL** | Pointer-only | `remember` with `source_description="Web: <url>"` |
 | **Connector finding** | Save durable fact, not full thread content | `remember` with `source_description="<Connector>: <thread/event id or subject>"` |
+| **Claude memory item** (Section 4 of Turn 2a) | Save fact verbatim or lightly condensed; optional `dimension` if it maps to a life area | `remember` with `source_description="Memory: <topic>"` |
 
 **Drive-mounted Cowork folders** use the Drive pointer-only path, not the local-file bytes-upload path. Cowork folders mounted from Google Drive look local on disk but the canonical copy lives in Drive — uploading bytes would create a stale duplicate.
 
