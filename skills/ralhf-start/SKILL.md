@@ -576,22 +576,31 @@ If the package includes safety-critical content (allergy, medication, medical re
 
 Pre-flight: was anything new used in the package that isn't already in the customer's RaLHF Library? Treat each of these as a queue entry:
 
-- Files / threads / events returned by any non-RaLHF connector query (Gmail thread, Drive file, Calendar event, Jira issue, Chrome browser page pull, etc.)
-- Local file paths or URLs the customer pasted into the conversation
-- Local files the customer pointed at during Turn 2b that RaLHF then fetched
-- Files in parent or sibling folders outside the Cowork mount that became part of the package
+- **(a)** Files / threads / events returned by any non-RaLHF connector query (Gmail thread, Drive file, Calendar event, Jira issue, Chrome browser page pull, etc.).
+- **(b)** Local file paths or URLs the customer pasted into the conversation, OR files the customer pointed at during Turn 2b that RaLHF then fetched, OR files in parent / sibling folders outside the Cowork mount that became part of the package.
+- **(c)** **Local Cowork-folder files RaLHF read and judged useful for the context package** — anything from the Cowork enumeration that survived triage and landed in Turn 2a's Section 3 ("Documents from the Cowork folder"). If the file was material enough to appear in Section 3, it goes in the queue. **Drive-mounted Cowork folders** (Google Drive Cowork mounts) take the Drive pointer-only action (see source-type table in `references/final-checkin-and-refresh.md`), NOT the local-file bytes upload — but they still go in the queue.
 
 **If the queue is non-empty, the ask fires.** Cover ALL queue entries in the single ask, not just the most recent.
 
 **Clarification on what counts as queue-non-empty:**
 
-- ANY Gmail/Drive/Chrome/Calendar/Jira fetch that returned content during the session = queue non-empty. Even if the content turns out to already be wiki-indexed, the ask still fires — the customer should decide whether to save the pointer to the specific thread/file/event, not RaLHF.
-- The threshold is "I queried a connector and got content back," not "the content is novel."
-- If you queried Gmail at all in Step 3a and got any thread back, Step 3c MUST fire.
+- ANY Gmail/Drive/Chrome/Calendar/Jira fetch that returned content during the session = queue non-empty.
+- ANY local Cowork file RaLHF read and put in Section 3 of Turn 2a = queue non-empty. Cowork-folder files are **not** in the Library by default — every Section 3 item is a candidate for promotion to the Library so future sessions have it without re-discovery.
+- Even if the content turns out to already be wiki-indexed, the ask still fires — the customer should decide whether to save the pointer to the specific thread/file/event, not RaLHF.
+- The threshold is "I used it in the package," not "the content is novel."
+- If you queried Gmail at all in Step 3a and got any thread back, OR if Section 3 of Turn 2a has any items in it, Step 3c MUST fire.
 
-Format: "Before I hand off, want me to save what we gathered to your RaLHF Library so it's there next time? I'd save pointers to <N> Drive files, the website you pulled, and the Gmail thread context. (yes/no)"
+Format: "Before I hand off, want me to save what we gathered to your RaLHF Library so it's there next time? I'd save pointers to <N> Drive files, the Gmail thread context, and upload <M> files from your Cowork folder. (yes/no)"
 
-On yes: silent ingest (`start_file_upload` for local files, `remember` for pointers and connector findings). Brief one-line acknowledgment, then handoff line.
+**Show post-dedup counts only.** When some items are already in the Library (per `get_wiki_catalog` or existing `remember` entries with matching `source_description`), skip them from the ask — never claim "save 6 pointers" if 5 are already saved.
+
+On yes: silent ingest per source type:
+- **Local Cowork files (truly local, not Drive-mounted)**: `start_file_upload` POST → `check_file_upload_status` (bytes upload).
+- **Drive files / Drive-mounted Cowork files**: `remember` with `source_description="Google Drive: <title>"` + substantive 1–2 sentence summary + key facts (pointer-only — Drive is canonical, uploads stale).
+- **Website URLs**: `remember` with `source_description="Web: <url>"` + key facts.
+- **Connector findings** (Gmail thread, Calendar event, Jira issue): `remember` the durable fact, not the full thread.
+
+Brief one-line acknowledgment ("Saved, Library refreshed."), then handoff line.
 
 On no/skip/silence: brief acknowledgment, handoff line. Save the negative preference via `remember` if the customer gave a reason.
 
