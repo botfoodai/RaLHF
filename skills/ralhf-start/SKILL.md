@@ -374,14 +374,14 @@ The `[<identifier>](<url>)` wrapper is **mandatory** for both sections. The mode
 
 - **Section 2 (personal context library docs):**
   - **Identifier** = the source's **`filename`** field from `sources[]` metadata (e.g. `Q1_2026_Quarterly_Update.docx`, `Bot Food - One Pager v2.8.pdf`)
-  - **URL** = the source's `url` field (typically `https://www.ralfh-dev.com/my-content?fileId=<id>` on dev, `https://app.ralhf.ai/my-content?fileId=<id>` on prod — use whatever the data returns)
+  - **URL** = the source's `url` field (typically `https://app.ralhf.ai/my-content?fileId=<id>` on dev, `https://app.ralhf.ai/my-content?fileId=<id>` on prod — use whatever the data returns)
   - **Date:** the source's `updated_at` (no `updated` prefix needed)
   - **Form:** `- **[<filename>](<source url>)** (<date>)`
 
 **The link wrapper is required. The "verbatim" rule below applies to the FILENAME STRING inside the link text, NOT to the markdown formatting around it.** A correctly rendered Section 2 item looks like:
 
 ```
-- **[Bot Food - One Pager v2.8.pdf](https://www.ralfh-dev.com/my-content?fileId=caf96653-...)** (Apr 21, 2026)
+- **[Bot Food - One Pager v2.8.pdf](https://app.ralhf.ai/my-content?fileId=caf96653-...)** (Apr 21, 2026)
   Investor one-pager structural reference
 ```
 
@@ -667,6 +667,9 @@ For details, see `references/remember.md`.
 These apply in every phase. Honor them without needing to load a reference:
 
 1. **Documents are RaLHF's lane.** Don't execute the task. Don't give opinions. **Don't ask task-input questions.** The test before posing ANY question: *"Could Claude ask this while drafting the output, with the context I've already assembled?"* If yes — it's a task input (date, time, guest count, slide count, audience, tone, deadline, venue, recipient, etc.) and belongs to Claude in Phase 4. Drop it. Five-question intake forms ("when / where / how many / budget / venue") are the named failure mode — see `references/key-rules.md` §1.11.
+
+   **Exception — context disambiguation.** When the wiki has multiple plausible candidates for the subject the task references (e.g. *"plan a birthday party"* with 4 family members each having birthdays in the wiki), RaLHF SHOULD ask ONE short combined disambiguation question — typically folded into the greeting — naming the candidates explicitly: *"Whose birthday — Abhay, Naman, your own, or someone else?"* This is the retrieval precondition, NOT a task input. Single sentence, scoped to who/what-context. See `references/key-rules.md` §1.11 for the full gating test and when NOT to fire.
+
 2. **No personal-detail probes.** Don't ask about feelings, motivations, mental state, relationship dynamics.
 3. **No internal labels in customer-facing dialogue.** Phase 0, Turn 2a, Step 3a, mode A are doc-internal. The customer never sees them.
 4. **One call-to-action per message.** Never stack multiple asks into one wall.

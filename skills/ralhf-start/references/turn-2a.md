@@ -24,8 +24,8 @@ Each item is required, not optional.
 - [ ] Are ALL FOUR section headers present, EXACTLY: `**1. From your personal wiki**`, `**2. Documents from your personal context library**`, `**3. Documents from the Cowork folder**`, `**4. Claude's memory**`? Four headers, in this order, every message. No renumbering. No skipping.
 - [ ] Does each section either have items OR a one-line empty-section status line? See "Empty section status" below for exact wording.
 - [ ] **For each wiki page in Section 1, did I `batch_fetch` it with ONE item per call?** A wiki page that has not been fetched cannot appear. If a fetch call spilled because I batched multiple items, did I retry with single-item calls?
-- [ ] **Did I populate Section 2 from the `sources[]` arrays of the fetched wiki pages?** Task-relevant source documents go in Section 2 as flat bullets. A document that's also in Section 3 (Cowork folder) appears in BOTH — duplication is signal.
-- [ ] Is every top-level item in the strict two-line bullet format: `- **<filename or title>** (<date>)` on line 1, two-space indented short description on line 2? No em dashes anywhere. No `—` separator between filename and description. No single-line bullets. **Section 1 uses the wiki page title (markdown-linked). Sections 2 and 3 use the actual filename** — for Section 2 in particular, NEVER use the human-readable title from `sources[]` when a filename field exists; use the filename verbatim with its extension (e.g. `Q1 2026 Quarterly Update.docx`, not `Q1 2026 Quarterly Update`).
+- [ ] **Did I populate Section 2 from the `sources[]` arrays of the fetched wiki pages?** Task-relevant source documents go in Section 2 as flat bullets. (Cross-section: a document that's also in Section 3 appears in BOTH; see "Silent dedup between Section 2 and Section 3" in the banned-moves below.)
+- [ ] Is every top-level item in the strict two-line bullet format: `- **<identifier>** (<date>)` on line 1, two-space indented short description on line 2? No em dashes anywhere. No `—` separator between filename and description. No single-line bullets. **Per-section identifier and link rules live in SKILL.md "Format for Sections 1 and 2 (... ALWAYS linked)" — Section 1 uses wiki page title (linked), Section 2 uses `filename` field verbatim (linked), Section 3 uses local filename (unlinked).** See banned-moves below for concrete wrong/right examples.
 - [ ] **Is every item a SINGLE document?** No combined entries like `v2.4.pptx + v2.4-context.md`. No "Logo A, Logo B, Logo C" entries. If three related files belong in the inventory, give them three separate bullets.
 - [ ] **Is every description 12 words or fewer?** Tell the customer what the document IS, not what it says.
 - [ ] **Are descriptions document descriptions ONLY?** No version-comparison notes ("newer than X", "may be behind Y"), no staleness flags, no cross-document commentary. Comparisons and staleness go in Turn 2b. Example: ✗ "Latest brand spec, newer than local v3.6" / ✓ "Latest brand spec, colors and fonts".
@@ -157,19 +157,17 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
 
 ## Rules for the findings list
 
-- **Section 2 and Section 3 always render the filename, never the title — and they render it VERBATIM.** Library documents (`sources[]`) and Cowork folder files both have filenames. Render them character-for-character, with extension. Preserve underscores (do NOT replace with spaces), preserve original capitalization, preserve dashes and parentheses, preserve the extension. `Bot Food - One Pager v2.8.pdf` stays as `Bot Food - One Pager v2.8.pdf`; `Q1_2026_Quarterly_Update.docx` stays as `Q1_2026_Quarterly_Update.docx`. When `sources[]` returns both a `title` and a `filename`, the filename always wins. Only fall back to the title when no filename field exists at all (rare). Wiki pages (Section 1) don't have filenames; use the page title there instead.
-- **Link the filename or title** to its URL when one is available. Per-section guidance:
-  - **Section 1 (wiki):** the catalog always returns a `url` per page. ALWAYS link.
-  - **Section 2 (library):** `sources[]` returns a `url` for every source document (typically a `https://app.ralhf.ai/my-content?fileId=...` form pointing at the library document viewer). ALWAYS link. Unlinked Section 2 items are the named regression — the customer needs to click through to open the doc, and the worked examples in this file model the linked form.
-  - **Section 3 (Cowork folder):** local files don't have URLs — leave unlinked. The exception is Drive-mounted Cowork folders; if a file maps to a Drive pointer with a known URL, link it.
-
-  Never fabricate a URL. If the URL field is missing entirely for an item, render it unlinked rather than invent.
+- **Identifier and link per section:** see SKILL.md "Format for Sections 1 and 2 (... ALWAYS linked)" for the canonical rule. Summary:
+  - Section 1: wiki page title, markdown-linked.
+  - Section 2: source's `filename` field, **verbatim** (preserve underscores, extensions, capitalization), **markdown-linked** to `url` field.
+  - Section 3: local filename, unlinked (no URL on disk; exception: Drive-mounted file with a Drive pointer).
+  Never fabricate a URL. If the URL is genuinely absent (rare), render unlinked rather than invent.
 - **Date is the last-modified date** in `<Mon D, YYYY>` format. For wiki pages use `last_updated_at`. For library and Cowork files use the file's modified date. If the date is unknown, write `undated`.
 - **Descriptions are very short.** 5 to 12 words. Describe what the document is, not what it says.
 - **Never fabricate filenames, titles, dates, or descriptions.** When metadata is missing, leave it out rather than invent.
 - **Group by source, list by relevance.** Within each section, the most task-relevant item comes first.
 - **No artificial count cap.** A long Turn 2a with 10+ relevant docs is fine. Trim by relevance, not length.
-- **A library document that's also in the Cowork folder appears in BOTH Section 2 and Section 3.** Do not silently dedupe. The duplication tells the customer the document is referenced from the wiki AND exists locally.
+- **A library document that's also in the Cowork folder appears in BOTH Section 2 and Section 3.** Do not silently dedupe — the duplication tells the customer the document is referenced from the wiki AND exists locally. (Same rule restated in the banned-moves list for visibility.)
 
 ## Banned in Turn 2a
 
@@ -185,7 +183,7 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
 - **Rendering Section 2 items WITHOUT a markdown link.** `sources[]` returns a `url` for every library document. Unlinked Section 2 items are a regression — the customer cannot click through to open the doc. **Side-by-side:**
   - ❌ WRONG (this is Section 3 format applied to Section 2): `- **Bot Food - One Pager v2.8.pdf** (Apr 21, 2026)`
   - ❌ WRONG (bare verbatim filename, no wrapper): `- Bot Food - One Pager v2.8.pdf (Apr 21, 2026)`
-  - ✅ RIGHT (Section 2 format — verbatim filename WRAPPED in markdown link): `- **[Bot Food - One Pager v2.8.pdf](https://www.ralfh-dev.com/my-content?fileId=caf96653-...)** (Apr 21, 2026)`
+  - ✅ RIGHT (Section 2 format — verbatim filename WRAPPED in markdown link): `- **[Bot Food - One Pager v2.8.pdf](https://app.ralhf.ai/my-content?fileId=caf96653-...)** (Apr 21, 2026)`
 
   The "verbatim" rule applies to the filename STRING inside the link text — NOT to the markdown formatting around it. Verbatim ≠ unlinked. Section 3 (local Cowork files) stays unlinked because local paths have no URL; Section 2 always has a URL and must use the linked form.
 - **Single-line bullets.** Every top-level item is two lines. Filename and date on line 1, description on line 2.

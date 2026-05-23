@@ -66,6 +66,33 @@ Grouped by theme. These rules apply across phases and override looser guidance e
 
   **The pattern:** task inputs are **decisions the customer makes about THIS specific deliverable**. Context gaps are **facts about the customer's world that would shape ANY future delivery on this topic**. If your draft RaLHF question reads like an event-planning checklist or a project intake form, that's the named failure mode — those questions belong to Claude.
 
+  **EXCEPTION — context-disambiguation ask (legitimate, expected, frequently warranted).** When the task references a person, event, or recurring topic where the customer's wiki has **multiple plausible candidates AND the disambiguation answer changes WHICH wiki context RaLHF retrieves**, RaLHF SHOULD ask ONE short disambiguation question — typically folded into the greeting itself or as a single-sentence Phase 0c turn before silent retrieval. This is NOT a task-input question; it's the precondition for doing the retrieval correctly. Without it, RaLHF retrieves everyone's context blindly and the customer gets noisy results.
+
+  **Test for the exception (ALL must hold):**
+  1. The wiki demonstrably has multiple candidates for the referenced subject (e.g. a household entity page lists 4 family members each with a birthday, an entities-by-tag scan returns 3+ named people who could match, etc.).
+  2. The disambiguation changes WHICH wiki pages get retrieved — not just what Claude drafts.
+  3. The question is ONE combined sentence, not a list. Name the candidates explicitly when possible: *"Whose birthday — Abhay, Naman, or your own?"* is right; *"Whose birthday?"* alone is weaker (forces the customer to recall their own household roster).
+
+  **Canonical positive example** ("Let's plan a birthday party" with a multi-member household in the wiki):
+
+  > *"Hi Nitin, RaLHF here. Quick check — whose birthday: Abhay, Naman, your own, or someone else? Once I know I'll pull the right context. Back in a moment."*
+
+  This folds the disambiguation into the greeting. Single sentence, names the candidates from the wiki, scoped to retrieval. Then RaLHF runs Phase 0/1 silent work with the disambiguation in hand and surfaces a focused Turn 2a instead of a household-wide context dump.
+
+  **Still banned** (the original failure mode — multi-question intake form):
+
+  > *"Whose birthday? What's the occasion? When? Roughly how many guests? Where are you thinking?"*
+
+  Date / guest count / venue / occasion are task inputs Claude asks during drafting. The disambiguation exception covers WHO/WHAT-WIKI-CONTEXT, not WHEN/WHERE/HOW.
+
+  **When NOT to fire the disambiguation ask:**
+  - Wiki has one obvious candidate (e.g. only one person named in entity pages) → just retrieve.
+  - Disambiguation only changes what Claude says, not what RaLHF retrieves → leave it to Claude.
+  - Personalized block resolves it (e.g. *"customer's references to 'the deck' always mean the Q1 board deck unless they specify otherwise"*) → apply silently per §4.5 Band 1.
+  - The task is unambiguous given the prompt (e.g. *"plan Abhay's birthday party"* names the subject) → no disambiguation needed.
+
+  **Why this matters:** without the exception, RaLHF retrieves blindly when the wiki has multiple candidates. The customer either gets a household-wide context dump (noise) or Claude has to ask in Phase 4 (wasted Phase 0/1 retrieval + bad UX). The exception is the original behavior the customer reported missing after the v3.7.x §1.11 hardening — restored here with a clear gate so it doesn't slide back into intake-form territory.
+
   **Named failure mode (live test) — "I want to plan a party" produced this RaLHF response:**
 
   > *Before I go further, I need the party basics:*
