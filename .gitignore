@@ -19,3 +19,10 @@ __pycache__/
 
 # Local Claude Code settings (contains user-specific permissions)
 .claude/
+
+# Extraction plugin — generated at runtime
+skills/extract-*/
+skills/ralhf-extract/.env
+skills/ralhf-extract/.sync-stack.json
+skills/ralhf-extract/.sync-payloads/
+schedule.json

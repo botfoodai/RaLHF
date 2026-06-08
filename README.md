@@ -4,7 +4,7 @@
 
 Built by [Bot Food](https://botfood.ai) on the [RaLHF](https://ralhf.ai) MCP server.
 
-[![Version](https://img.shields.io/badge/version-3.6.5-blue.svg)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-3.8.5-blue.svg)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-backend.ralfh--dev.com-orange.svg)](https://backend.ralhf.ai/mcp)
 
@@ -46,6 +46,9 @@ See [`PHASES.md`](./PHASES.md) for the orientation map and [`skills/ralhf-start/
 | `ralhf-sync` | `/ralhf:ralhf-sync` | Manual Phase 5 with a review gate before saves |
 | `ralhf-intro` | `/ralhf:ralhf-intro` | First-run setup check + onboarding intro |
 | `feed-ralhf` | `/ralhf:feed-ralhf` | Autonomous end-of-session dump: dense summary + file uploads + postmortem |
+| `ralhf-extract` | `/ralhf:ralhf-extract <url>` | Extract structured data from a webpage and author a reusable skill |
+| `ralhf-schedule` | `/ralhf:ralhf-schedule add <url>` | Manage scheduled recurring extractions (add/remove/list/enable/disable) |
+| `ralhf-schedule-run` | Internal (scheduled task) | Execute due scheduled extractions and cache results |
 
 ---
 
@@ -71,8 +74,11 @@ plugins/ralhf/
 ├── hooks/
 │   ├── hooks.json                  # SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop / SessionEnd
 │   ├── ralhf-init.md               # SessionStart primer
+│   ├── extractor-init.md           # SessionStart primer (extraction skills)
 │   ├── user-prompt-gate.md         # per-turn skill-invocation gate
 │   └── pretool-askuser-block.json  # AskUserQuestion deny
+├── platform/
+│   └── claude.md                   # tool mappings for Claude Code / Cowork (extraction)
 ├── scripts/                        # python hook helpers (require python on PATH)
 │   ├── print-hook.py
 │   ├── track-context-tool.py
@@ -86,7 +92,15 @@ plugins/ralhf/
     ├── ralhf-learn/SKILL.md        # /ralhf:ralhf-learn — teach RaLHF a new fact
     ├── ralhf-sync/SKILL.md         # /ralhf:ralhf-sync — manual Phase 5 with review
     ├── ralhf-intro/SKILL.md        # /ralhf:ralhf-intro — setup check + intro
-    └── feed-ralhf/SKILL.md         # /ralhf:feed-ralhf — session dump
+    ├── feed-ralhf/SKILL.md         # /ralhf:feed-ralhf — session dump
+    ├── ralhf-extract/              # /ralhf:ralhf-extract — web data extraction
+    │   ├── SKILL.md
+    │   ├── config.json
+    │   └── references/             # extraction sub-pages (16 files)
+    ├── ralhf-schedule/             # /ralhf:ralhf-schedule — schedule manager
+    │   ├── SKILL.md
+    │   └── references/
+    └── ralhf-schedule-run/SKILL.md # internal scheduled extraction executor
 ```
 
 ---
