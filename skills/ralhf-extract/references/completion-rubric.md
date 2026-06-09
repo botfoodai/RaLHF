@@ -21,7 +21,7 @@ checks (1–5) auto-pass. Pipeline checks (6–10) always apply.
 | 6 | Local files saved | Skill files written to disk (cold path) or unchanged (warm path). | Re-save from in-memory recipe using `references/templates.md`. |
 | 7 | Recipe complete | `content_type` set, `strategy` set, `fields` non-empty. Chronological data has `incremental` object. | Infer missing fields. See `references/compliance-gate.md` § Recipe Completeness. |
 | 8 | Auto-schedule entry | `schedule.json` has enabled entry for this domain/view with correct frequency from `references/domain-classification.md`. | Create entry per Phase 3a § Auto-schedule. |
-| 9 | Scheduling model | Single `ralhf-extractions` platform task (unified tick). No per-domain tasks. | Delete per-domain tasks. Create/update unified task. |
+| 9 | Scheduling model | Single `ralhf-extractions` platform task (unified tick). No per-domain tasks. Interval matches `tick_interval_hours`. `cowork_task_synced` is `true`. | Delete per-domain tasks. Use `update_scheduled_task` to fix interval (never `create_scheduled_task` when task exists). Set `cowork_task_synced: true`. |
 | 10 | No identity leak | No `user`, `user_email`, or identity fields in any backend request body. | Strip from sync-stack payloads and retry. |
 
 ## Fields Format — CRITICAL

@@ -271,12 +271,14 @@ to the extraction schedule. Do NOT ask the user — scheduling is automatic.
    }
    ```
 
-6. **Auto-create/update platform scheduled task** (if available) — same
-   logic as `ralhf-schedule` add step 6. First entry → create
-   `ralhf-extractions` task. Tick changed → update interval. Unchanged →
-   no action. If platform scheduled tasks are not available (Codex, CLI),
-   set `cowork_task_synced: false` — `schedule.json` still tracks all
-   state and the user invokes schedule-run manually.
+6. **Update platform scheduled task** (if available) — if
+   `ralhf-extractions` already exists, update its interval to match the
+   new `tick_interval_hours`. If it doesn't exist, create it with
+   interval = `tick_interval_hours` and prompt `/ralhf-schedule-run`.
+   **Never recreate a task that already exists** — always use
+   `update_scheduled_task` for existing tasks. After successful
+   create/update, set `cowork_task_synced: true`. If platform scheduled
+   tasks are not available (Codex, CLI), set `cowork_task_synced: false`.
 
 7. **Spawn cadence verification agent** — launch a background verification
    agent (inline if background agents are unavailable) that reads

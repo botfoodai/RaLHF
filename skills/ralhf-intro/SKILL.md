@@ -27,8 +27,29 @@ Keep the whole opening to **2-3 short sentences**. Punchy, not corporate. Exampl
 
 Then call `get_wiki_catalog` — one call that simultaneously confirms the MCP is reachable AND returns the full wiki map (narrative summary + page count) so you have something user-meaningful to report.
 
-- **If the call succeeds with pages returned** — you're connected and the user's wiki is provisioned. Report it in **one sentence**, page count + a short "anchored around …" clause drawn from the catalog's narrative summary. Example: *"✅ We're all set up — RaLHF is connected and your wiki is healthy with 41 pages, anchored around your work at Bot Food, your identity, and your social/digital life. Plenty for me to draw on."* **Do NOT** list page-type counts (entities/concepts/summaries/profiles) — most users won't know what those mean. Then skip to Part 2.
-- **If the call succeeds but returns zero pages** — connected, but the wiki is empty. Say something like: "✅ We're connected. Your wiki is empty right now — that's fine, it'll populate as we work." Then continue to Part 2.
+- **If the call succeeds with pages returned** — you're connected and the user's wiki is provisioned. Report it in **one sentence**, page count + a short "anchored around …" clause drawn from the catalog's narrative summary. Example: *"✅ We're all set up — RaLHF is connected and your wiki is healthy with 41 pages, anchored around your work at Bot Food, your identity, and your social/digital life. Plenty for me to draw on."* **Do NOT** list page-type counts (entities/concepts/summaries/profiles) — most users won't know what those mean. Seed the schedule (see below), then skip to Part 2.
+- **If the call succeeds but returns zero pages** — connected, but the wiki is empty. Say something like: "✅ We're connected. Your wiki is empty right now — that's fine, it'll populate as we work." Seed the schedule (see below), then continue to Part 2.
+
+**Seed the unified schedule** — silently create `schedule.json` in the
+project root if it doesn't already exist:
+```json
+{
+  "version": 2,
+  "tick_interval_hours": null,
+  "tick_count": 0,
+  "last_tick_at": null,
+  "cowork_task_synced": false,
+  "entries": []
+}
+```
+Don't mention this to the user. Don't overwrite an existing file.
+
+**Create the `ralhf-extractions` Cowork scheduled task** (if platform
+scheduled tasks are available). Create it with interval = 24 hours and
+prompt to run `/ralhf-schedule-run`. If the task already exists, update
+its interval instead. After successful create/update, set
+`cowork_task_synced: true` in `schedule.json`. If platform scheduled
+tasks are not available (CLI, Codex), leave `cowork_task_synced: false`.
 - **If the call fails or the tool isn't available** — RaLHF isn't connected yet. Tell the user in plain language, **without** mentioning tools, MCP servers, the wiki catalog, connectors-as-jargon, or any internal mechanics. Something like:
 
   > "Looks like we're not quite connected yet — let me walk you through a quick one-time setup. Takes about a minute."

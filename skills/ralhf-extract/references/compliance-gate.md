@@ -93,6 +93,8 @@ Skip all when `backend_mode` is `"local-only"`.
 | Schedule uses unified tick model (single `ralhf-extractions` task) | Pass | — |
 | No per-domain scheduled tasks were created | Pass | Delete any `ralhf-extract-{domain}` tasks. |
 | `schedule.json` has `version: 2` format | Pass | Migrate from v1 if needed. |
+| `ralhf-extractions` task interval matches `tick_interval_hours` | Pass | Use `update_scheduled_task` to set the correct interval. **Never** use `create_scheduled_task` when `ralhf-extractions` already exists — that overwrites the task. |
+| `cowork_task_synced` is `true` (when platform supports scheduled tasks) | Pass | Update the task interval, then set `cowork_task_synced: true`. |
 
 ## Prompt Template
 
