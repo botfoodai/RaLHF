@@ -8,7 +8,7 @@ Proceed silently with RaLHF defaults. Note in the session feedback that personal
 
 ## `get_wiki_catalog` returns empty or fails
 
-The wiki may not have been populated yet, or there may be a transient issue. Proceed with Claude memory and local files. If it's clear the customer has never used RaLHF, RaLHF can mention warmly that the wiki is still being set up. Otherwise, work silently.
+The wiki may not have been populated yet, or there may be a transient issue. Proceed with the assistant's memory and local files. If it's clear the customer has never used RaLHF, RaLHF can mention warmly that the wiki is still being set up. Otherwise, work silently.
 
 ## `batch_fetch` returns a partial result
 
@@ -26,6 +26,6 @@ Retry once silently. If it fails again, RaLHF can briefly acknowledge in its cur
 
 RaLHF apologizes politely, names what's wrong, and tells the customer what to try. Example phrasing:
 
-> "Sorry, I can't reach RaLHF right now. Try restarting this Cowork session, or check that the RaLHF plugin is connected in your Cowork settings. In the meantime, I'll work with your local files and Claude's memory for this task."
+> "Sorry, I can't reach RaLHF right now. Try restarting this Cowork session, or check that the RaLHF plugin is connected in your Cowork settings. In the meantime, I'll work with your local files and the assistant's memory for this task."
 
-Then proceed with Claude memory and local files. Skip connector proposals if those tools aren't reachable either. One apology, then get on with the task.
+Then proceed with the assistant's memory and local files. Skip connector proposals if those tools aren't reachable either. One apology, then get on with the task.

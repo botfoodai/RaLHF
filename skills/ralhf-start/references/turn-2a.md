@@ -1,14 +1,18 @@
 # Turn 2a: Starting context
 
-One message. **Four sections with FIXED identities.** Section 1 is always "From your personal wiki." Section 2 is always "Documents from your personal context library." Section 3 is always "Documents from the Cowork folder." Section 4 is always "Claude's memory." All four headers appear every time — no renumbering, no skipping. An empty section shows a one-line status, never disappears.
+One message. **Four context sources with FIXED identities, in canonical order:** "From your personal wiki", then "Documents from your personal context library", then "Documents from the Cowork folder", then "The assistant's memory". **Only sources with task-relevant content appear** — an empty source is dropped entirely (no header, no status line), and whatever remains is numbered sequentially `1..N` in that canonical order. Headers always carry their full descriptive name, so renumbering can never mislabel a section.
 
 Turn 2a is strictly the inventory + closing ask. Staleness notes, version conflicts, read-and-discard explanations all go in Turn 2b — NOT here.
 
-## Why fixed identities, not floating numbers
+## Why drop empties but keep descriptive names
 
-Previous versions renumbered sections when one was empty. That rule caused the worst class of bugs we kept hitting: the AI promotes the next section to fill the gap and ends up labeling "Documents from the Cowork folder" as Section 1 because the wiki fetch failed. The customer thinks Section 1 = wiki, sees Cowork folder content instead, loses trust.
+Two failure modes to avoid, and how this design avoids both:
 
-Fixed identities eliminate that bug class. The customer always sees four headers in the same order. If a section is empty, they see a one-line status telling them why. The AI cannot accidentally mislabel a section because the labels are predetermined.
+**1. Clutter from empty sections.** Earlier versions printed all four headers every time, each empty one carrying a "we checked and found nothing" status line. On a task where only the wiki and memory had content, the customer read four headers and two apologies. The package looked padded. **Fix:** a source with no task-relevant content is dropped entirely — no header, no status line. The message shows only what's actually there.
+
+**2. Mislabeling when numbers float.** An even older version renumbered by position and the AI would promote the next source to fill a gap — labeling "Documents from the Cowork folder" as Section 1 when the wiki was empty, so the customer expecting wiki content saw local files and lost trust. **Fix:** every header keeps its full descriptive name ("From your personal wiki", never just "Section 1"). The leading number is purely sequential over the sources that survived; because the customer reads the name, a renumber can't mislabel what they're looking at.
+
+So: drop empties (no clutter), keep names (no mislabeling), number the survivors `1..N` in canonical order.
 
 ## Why four sections, not three
 
@@ -21,59 +25,54 @@ v3.5.3 restores the library as its own Section 2. The fetch is now forced by ind
 Each item is required, not optional.
 
 - [ ] Does the message start with an intro line that says I searched through the customer's context and is presenting the most relevant cut? Required pattern: something like "After searching through your context, here's what I think is most relevant for `<task>`:" Banned: "Here's what I've got", "Here's the context", "Found a solid base", "Here are the documents I think are relevant".
-- [ ] Are ALL FOUR section headers present, EXACTLY: `**1. From your personal wiki**`, `**2. Documents from your personal context library**`, `**3. Documents from the Cowork folder**`, `**4. Claude's memory**`? Four headers, in this order, every message. No renumbering. No skipping.
-- [ ] Does each section either have items OR a one-line empty-section status line? See "Empty section status" below for exact wording.
+- [ ] Do ONLY the sources with task-relevant content appear, each with its exact descriptive name (`From your personal wiki`, `Documents from your personal context library`, `Documents from the Cowork folder`, `The assistant's memory`), numbered sequentially `1..N` in that canonical order? Empty sources are dropped — no header for them.
+- [ ] Are there NO empty-section status lines ("No task-relevant files in the Cowork folder", "No task-relevant memory entries", etc.)? An empty source is silent, not status-lined. (Only exception: the top-of-message wiki-unreachable note — see "Empty sources are dropped" below.)
 - [ ] **For each wiki page in Section 1, did I `batch_fetch` it with ONE item per call?** A wiki page that has not been fetched cannot appear. If a fetch call spilled because I batched multiple items, did I retry with single-item calls?
 - [ ] **Did I populate Section 2 from the `sources[]` arrays of the fetched wiki pages?** Task-relevant source documents go in Section 2 as flat bullets. (Cross-section: a document that's also in Section 3 appears in BOTH; see "Silent dedup between Section 2 and Section 3" in the banned-moves below.)
 - [ ] Is every top-level item in the strict two-line bullet format: `- **<identifier>** (<date>)` on line 1, two-space indented short description on line 2? No em dashes anywhere. No `—` separator between filename and description. No single-line bullets. **Per-section identifier and link rules live in SKILL.md "Format for Sections 1 and 2 (... ALWAYS linked)" — Section 1 uses wiki page title (linked), Section 2 uses `filename` field verbatim (linked), Section 3 uses local filename (unlinked).** See banned-moves below for concrete wrong/right examples.
 - [ ] **Is every item a SINGLE document?** No combined entries like `v2.4.pptx + v2.4-context.md`. No "Logo A, Logo B, Logo C" entries. If three related files belong in the inventory, give them three separate bullets.
 - [ ] **Is every description 12 words or fewer?** Tell the customer what the document IS, not what it says.
 - [ ] **Are descriptions document descriptions ONLY?** No version-comparison notes ("newer than X", "may be behind Y"), no staleness flags, no cross-document commentary. Comparisons and staleness go in Turn 2b. Example: ✗ "Latest brand spec, newer than local v3.6" / ✓ "Latest brand spec, colors and fonts".
-- [ ] Am I avoiding ALL task-input questions? Slide count, audience, tone, format, deadline, "what's the brief", "are we iterating v2.4 or starting fresh", "anything to change from v2.4". These belong to Claude in Phase 4.
+- [ ] Am I avoiding ALL task-input questions? Slide count, audience, tone, format, deadline, "what's the brief", "are we iterating v2.4 or starting fresh", "anything to change from v2.4". These belong to the assistant in Phase 4.
 - [ ] Have I kept staleness notes, version conflicts, and read-and-discard explanations OUT of Turn 2a? Those belong in Turn 2b.
 - [ ] Is the closing one short ask that signals the amendment step is coming next? Not "what's the brief". Just "does this look right" or "is this the right foundation".
 
 If any box is unchecked, fix it before sending the message.
 
-## Empty section status (one-line replacement)
+## Empty sources are dropped (no status lines)
 
-When a section has no items, the section header still appears but is followed by ONE status line instead of bullets. Pick the appropriate wording:
+A source with no task-relevant content does NOT appear. No header, no status line, no empty bullet — it's absent, and the surviving sources renumber `1..N`. Each of these is now a silent drop:
 
-**Section 1 (From your personal wiki) empty cases:**
-- Wiki fetch failed or unreachable:
-  > Wiki couldn't be reached this session. Working from local files and memory only.
-- No task-relevant wiki pages found:
-  > No wiki pages matched this task. Catalog scanned but nothing applied.
+- **From your personal wiki** — wiki reached but nothing matched → drop the section.
+- **Documents from your personal context library** — no task-relevant source documents in the fetched wiki pages → drop the section.
+- **Documents from the Cowork folder** — no folder mounted, OR mounted but no relevant files → drop the section.
+- **The assistant's memory** — nothing applicable → drop the section.
 
-**Section 2 (Documents from your personal context library) empty cases:**
-- No task-relevant source documents in the fetched wiki pages:
-  > No task-relevant documents in your context library.
-- Wiki itself couldn't be reached (Section 1 also empty):
-  > Library unreachable along with wiki.
+**Two cases that are NOT silent drops:**
 
-**Section 3 (Documents from the Cowork folder) empty cases:**
-- No Cowork folder mounted:
-  > No Cowork folder mounted this session.
-- Folder mounted but no task-relevant files:
-  > No task-relevant files in the Cowork folder.
+1. **Wiki unreachable (error, not absence).** If `get_wiki_catalog` / `batch_fetch` failed outright — server down, every retry spilled, spill files unreadable — put ONE short note at the TOP of the message, above the numbered sources:
+   > Heads up: I couldn't reach your wiki this session, so this is from local files and memory only.
 
-**Section 4 (Claude's memory) empty cases:**
-- Memory has nothing applicable:
-  > No task-relevant memory entries.
+   Then list whatever sources do have content. This degraded-state warning is different from "wiki reached, nothing matched" (a silent drop) — here RaLHF couldn't even look.
 
-The status line confirms RaLHF checked the source. The customer sees the AI did the work even when the result was empty.
+2. **Everything is empty.** No wiki match, no library docs, no Cowork files, no memory → render no headers. Send one honest line instead:
+   > I searched your wiki, library, and memory but didn't find anything specific to `<task>` yet. Want to point me at a doc or wiki page, or should I just go ahead?
 
-## The four sections (fixed identities)
+The old behavior — printing every header with a "nothing found" status line under it — is gone. RaLHF having done the work is conveyed by the intro line ("After searching through your context…"), not by stubbed-out empty sections.
 
-1. **From your personal wiki** — wiki pages from the customer's RaLHF wiki that match the task. Each page is a flat bullet with its title (linked), update date, and brief description. Wiki pages MUST have been `batch_fetch`-ed before they appear here.
+## The four context sources (fixed identities, canonical order)
 
-2. **Documents from your personal context library** — the task-relevant source documents from those wiki pages' `sources[]` arrays. Flat bullets. A document that ALSO exists in the Cowork folder (Section 3) is listed in both — that signals the document is referenced from the wiki AND exists locally.
+These are the four possible sources, in the order they appear when present. Each carries its descriptive name; the leading number is assigned sequentially over the sources that survive.
 
-3. **Documents from the Cowork folder** — local project files that apply (only when running in Cowork mode with a local folder mounted).
+- **From your personal wiki** — wiki pages from the customer's RaLHF wiki that match the task. Each page is a flat bullet with its title (linked), update date, and brief description. Wiki pages MUST have been `batch_fetch`-ed before they appear here.
 
-4. **Claude's memory** — facts or notes Claude has stored about the customer that are relevant to this task and not duplicated by Sections 1, 2, or 3.
+- **Documents from your personal context library** — the task-relevant source documents from those wiki pages' `sources[]` arrays. Flat bullets. A document that ALSO exists in the Cowork folder is listed in both — that signals the document is referenced from the wiki AND exists locally.
 
-All four headers appear in every Turn 2a message, in this order. An empty section gets a one-line status (see "Empty section status" above), not a renumber. Do NOT skip headers. Do NOT renumber.
+- **Documents from the Cowork folder** — local project files that apply (only when running in Cowork mode with a local folder mounted).
+
+- **The assistant's memory** — facts or notes the assistant has stored about the customer that are relevant to this task and not duplicated by the wiki, library, or Cowork sources.
+
+Only the sources with content appear, numbered `1..N` in the order above. An empty source is dropped (see "Empty sources are dropped" above), not status-lined. Do NOT print a header for a source with no content.
 
 ## Format per item
 
@@ -96,7 +95,7 @@ When the description is short enough, collapse to one line:
 - **<filename>** (<date>): <very short description>
 ```
 
-Section 4 (Claude's memory entries are facts/notes, not documents):
+Section 4 (The assistant's memory entries are facts/notes, not documents):
 
 ```
 - **<topic>**: <brief relevant fact>
@@ -120,8 +119,8 @@ Vary the phrasing every fire. The closing IS the amendment ask. If the customer 
 
 - "Once you confirm, I'll ask if anything's missing or should come out." — previews a redundant future ask.
 - "After this I'll ask if anything should be added or removed, then we can decide on connectors." — wasted text, ask the question now.
-- "What's the brief?" / "Which direction are we going?" — task-input questions, those are Claude's.
-- **A bulleted list of clarifying questions of any kind** ("Who is it for? / When? / How many guests? / Where? / Budget?"). The amendment ask is ONE short sentence asking if the inventory looks right; it is NOT a slot to interrogate the customer for task inputs. See `references/key-rules.md` §1.11 — task-input questions belong to Claude in Phase 4, never to RaLHF. If the wiki is empty on this topic, present empty-section statuses and ask if there's a wiki page they'd like added — NOT a five-question intake form.
+- "What's the brief?" / "Which direction are we going?" — task-input questions, those are the assistant's.
+- **A bulleted list of clarifying questions of any kind** ("Who is it for? / When? / How many guests? / Where? / Budget?"). The amendment ask is ONE short sentence asking if the inventory looks right; it is NOT a slot to interrogate the customer for task inputs. See `references/key-rules.md` §1.11 — task-input questions belong to the assistant in Phase 4, never to RaLHF. If the wiki is empty on this topic, present empty-section statuses and ask if there's a wiki page they'd like added — NOT a five-question intake form.
 
 ## Full format example
 
@@ -148,12 +147,31 @@ After searching through your context, here's what I think is most relevant for t
 - **botfood-board-narrative-notes.md** (Apr 20, 2026)
   Working notes on the Q1 narrative arc
 
-**4. Claude's memory**
+**4. The assistant's memory**
 - **Board deck format preference**: tight executive summary; detailed data in appendix
 - **Last board deck timing**: 18 slides came in 12 minutes under the meeting block
 
-Does this look right? Once you confirm, I'll ask if anything's missing or should come out.
+Does this look right? Anything to add or remove?
 ```
+
+That example has all four sources. When some are empty, they're dropped and the rest renumber. Same task, but this session has no library docs and no Cowork folder mounted — so only the wiki and memory sources appear, numbered 1 and 2:
+
+```
+After searching through your context, here's what I think is most relevant for the Q1 board deck:
+
+**1. From your personal wiki**
+- **[Q1 2026 Board Meeting](https://app.ralhf.ai/wiki/...)** (updated Apr 12, 2026)
+  Confirms the May 5 meeting date and 6-section rhythm
+- **[Bot Food Corporation](https://app.ralhf.ai/wiki/...)** (updated May 14, 2026)
+  Business overview and current entity profile
+
+**2. The assistant's memory**
+- **Board deck format preference**: tight executive summary; detailed data in appendix
+
+Does this look right? Anything to add or remove?
+```
+
+No "2. Documents from your personal context library — none found" stub, no "3. Documents from the Cowork folder — no folder mounted" stub. The two empty sources are simply gone, and memory takes the `2` slot.
 
 ## Rules for the findings list
 
@@ -172,8 +190,9 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
 ## Banned in Turn 2a
 
 - **Three-section structure with nested sources.** That was v3.5.0–v3.5.2. v3.5.3+ uses four flat sections with library as Section 2.
-- **Renumbered sections when one is empty.** Section 1 is always "From your personal wiki", Section 2 is always "Documents from your personal context library", Section 3 is always "Documents from the Cowork folder", Section 4 is always "Claude's memory". Empty sections show a one-line status, NEVER get renumbered or dropped.
-- **Skipped section headers.** All four section headers appear in every Turn 2a message. If a section is empty, you write its header with a one-line status under it, not blank, not removed.
+- **Empty-section status lines.** A source with no content gets dropped, NOT a "No task-relevant files in the Cowork folder" / "No task-relevant memory entries" stub. The only allowed top-of-message note is the wiki-unreachable degraded-state warning.
+- **Headers without their descriptive name.** Every header is the full string ("From your personal wiki", etc.) prefixed by its sequential number. A bare "Section 1" with no name is banned — the name is what prevents renumbering from mislabeling.
+- **Mislabeling a source under the wrong name.** Renumbering is sequential over surviving sources, but the NAME never moves: don't ever print local files under "From your personal wiki" or memory under "Documents from the Cowork folder". The number floats; the name+content pairing does not.
 - **Wiki pages with no `batch_fetch` data.** If you list a wiki page in Section 1, you must have fetched it. Section 2 is populated from those pages' `sources[]` arrays — without the fetch, Section 2 is empty.
 - **Multi-item `batch_fetch` calls.** Always one item per call. Multi-item calls spill. If you spilled, retry one-at-a-time.
 - **Silent dedup between Section 2 and Section 3.** A document that exists in both places appears in both sections. Duplication is signal.
@@ -188,7 +207,7 @@ Does this look right? Once you confirm, I'll ask if anything's missing or should
   The "verbatim" rule applies to the filename STRING inside the link text — NOT to the markdown formatting around it. Verbatim ≠ unlinked. Section 3 (local Cowork files) stays unlinked because local paths have no URL; Section 2 always has a URL and must use the linked form.
 - **Single-line bullets.** Every top-level item is two lines. Filename and date on line 1, description on line 2.
 - **Combined entries.** "Logo A, Logo B, Logo C" or "v2.4.pptx + v2.4-context.md" packs multiple files into one bullet. Each file gets its own bullet.
-- **Old-style section headers.** "Pages from your RaLHF Wiki", "From the local Marketing folder", "From Claude's memory". The new headers are numbered and exact.
+- **Old-style section headers.** "Pages from your RaLHF Wiki", "From the local Marketing folder", "From the assistant's memory". The new headers are numbered and exact.
 - **Staleness notes, version conflicts, read-and-discard explanations inside Turn 2a.** Those belong in Turn 2b. Turn 2a is strictly inventory + closing ask.
 
 ## Read-and-discard pattern

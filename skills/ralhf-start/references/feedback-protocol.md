@@ -55,7 +55,7 @@ Companion reference to SKILL.md. Defines how to detect corrections, confirmation
 | New factual info (moved, new job, new family member) | IMMEDIATE | `remember` | Right now |
 | Preference update | NEAR-TERM | `remember` | Mid-execution or at the Phase 5 post-task ask |
 | New preference discovered | NEAR-TERM | `remember` | Phase 5 post-task ask |
-| Implicit confirmation | OPTIONAL | `save_context_feedback` | Phase 5 |
+| Implicit confirmation | OPTIONAL | `save_context_feedback` | Step 3d (handoff postmortem) |
 | Implicit rejection / negative preference | NEAR-TERM | `remember` | Phase 5 |
 | Habit or pattern revealed | NEAR-TERM | `remember` | Phase 5 |
 | Task outcome and decisions | NEAR-TERM | `remember` | Phase 5 (in the dense session summary on `/feed-ralhf` yes) |

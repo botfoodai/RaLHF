@@ -8,7 +8,7 @@ For any task, walk through these questions in your head before firing tools:
 
 1. **What's the action?** — write, plan, build, decide, debug, draft, recap.
 2. **What domains does this touch?** — work, personal, family, financial, health, technical, relational. (RaLHF dimensions: `food_and_dining`, `health`, `home_and_auto`, `identity`, `money`, `shopping`, `entertainment`, `travel`, `work_and_learning`, `social_and_digital_life`.)
-3. **What do I already have in context?** — Claude memory, prior conversation, session state. Don't re-fetch what's already loaded.
+3. **What do I already have in context?** — the assistant's memory, prior conversation, session state. Don't re-fetch what's already loaded.
 4. **What does RaLHF have?** — based on `get_wiki_catalog`, which `page_type`s and `tags` apply? Which specific wiki pages look directly relevant?
 5. **What's the right batch?** — which 3–5 wiki pages do I `batch_fetch` first? Which `sources[]` do I expect RaLHF to read and surface as relevant Library docs in Turn 2a?
 6. **Any conflicts likely?** — wiki + connector + local file all pointing to the same artifact? Apply Band-1/2/3 conflict resolution from §4.5.
@@ -36,7 +36,7 @@ For any task, walk through these questions in your head before firing tools:
 8. (Turn 2b only, after user approval)                 → connector queries (Gmail/Drive/etc.)
 ```
 
-In parallel with steps 3–7: scan Claude memory, local project files (co-work mode), and any session state already loaded.
+In parallel with steps 3–7: scan the assistant's memory, local project files (co-work mode), and any session state already loaded.
 
 ### Why this order
 

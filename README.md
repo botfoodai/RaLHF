@@ -1,6 +1,6 @@
-# RaLHF — Personal Context Engineer for Claude (dev variant)
+# RaLHF — Personal Context Engineer for your AI assistant (dev variant)
 
-> Turns Claude into your personal context engineer. Before any task, RaLHF assembles a context package from your personal wiki, Claude's memory, local files, and connected apps — and shows you the plan before Claude touches the work.
+> Gives your AI assistant a personal context engineer. Before any task, RaLHF assembles a context package from your personal wiki, the assistant's memory, local files, and connected apps — and shows you the plan before the assistant touches the work.
 
 Built by [Bot Food](https://botfood.ai) on the [RaLHF](https://ralhf.ai) MCP server.
 
@@ -16,7 +16,7 @@ Built by [Bot Food](https://botfood.ai) on the [RaLHF](https://ralhf.ai) MCP ser
 
 Generic AI answers are the default failure mode of every assistant. The model has no idea who you are, what you've already decided, what your team calls things, or which of your past projects matter. So it produces something competent but anonymous — and you spend the next five turns correcting it.
 
-**RaLHF fixes that by intervening *before* Claude executes.** On every user message, RaLHF runs a five-phase flow that gathers everything relevant to the task — from your RaLHF wiki, Claude's memory, your local project, and your connected apps — proposes a plan, and waits for your green light before handing the assembled package to Claude.
+**RaLHF fixes that by intervening *before* the assistant executes.** On every user message, RaLHF runs a five-phase flow that gathers everything relevant to the task — from your RaLHF wiki, the assistant's memory, your local project, and your connected apps — proposes a plan, and waits for your green light before handing the assembled package to the assistant.
 
 ---
 
@@ -26,12 +26,13 @@ Generic AI answers are the default failure mode of every assistant. The model ha
 
 | Phase | What happens |
 |---|---|
-| **0 — Load** | Greeting + silent pull of personalized retrieval rules (`get_instructions`) and full wiki map (`get_wiki_catalog`). Greeting tier (full / familiar / one-liner) is gated on `get_my_mcp_usage`. |
-| **1 — Discover** | Parallel drill: relevant wiki pages, Claude's existing memory, local project files, session state, and the MCP connector surface. Follows wikilinks and triages source documents. |
+| **0a — Triage & ask-first gate** | On every real task, RaLHF names the task, **recommends** whether to pull context or hand straight to the assistant, and asks `(yes / no)` — then waits. The recommendation is computed from the prompt (no lookups): personal-context signals → pull; self-contained tasks → skip; new users lean pull. Trivia / plugin meta-questions skip the gate silently. Only `get_my_mcp_usage` runs before the reply. |
+| **0 — Load** | On "pull": silent pull of personalized retrieval rules (`get_instructions`) and the wiki map (`get_wiki_catalog`). No separate greeting — identity rode along in the gate. The light flow (pull on a self-contained task) skips the catalog. |
+| **1 — Discover** | Parallel drill: relevant wiki pages, the assistant's existing memory, local project files, session state, and the MCP connector surface. Follows wikilinks and triages source documents. |
 | **2 — Propose** | Staged check-ins (Turn 2a / 2b / 2c) — one ask per message. Soft asks first, then connector flow when Gmail / Calendar / Drive / Jira / etc. could help. |
-| **3 — Confirm** | Surfaces gaps + final pre-handoff check-in. **Hard gate.** No execution until the user says go. |
-| **4 — Execute** | Hands the assembled package to Claude with citations and scope notes. |
-| **5 — Remember** | Post-task `feed-ralhf` ask captures durable facts + structured postmortem (`save_context_feedback`). |
+| **3 — Confirm** | Surfaces gaps + final pre-handoff check-in + Library-refresh ask (promotes new Drive/Cowork/memory items via upload/`remember`). **Hard gate.** No execution until the user says go. A silent context-gathering postmortem (`save_context_feedback`) fires here at handoff. |
+| **4 — Execute** | Hands the assembled package to the assistant with citations and scope notes. |
+| **5 — Remember** | Post-task `feed-ralhf` ask captures durable facts (dense summary + file uploads) and saves approved artifacts to the Library. The postmortem already fired at handoff. |
 
 See [`PHASES.md`](./PHASES.md) for the orientation map and [`skills/ralhf-start/SKILL.md`](./skills/ralhf-start/SKILL.md) for the canonical spec.
 

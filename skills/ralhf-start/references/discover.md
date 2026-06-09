@@ -22,7 +22,7 @@ Do NOT query non-RaLHF connectors (Gmail, Calendar, Drive, Jira, QuickBooks, etc
      - **`search(...)` is the narrow-target backstop**: use when you know a specific named page or one-off phrase that doesn't fit a page_type/tag (e.g. a person's name, a unique product term) AND your `browse_wiki(search_text=...)` filters didn't surface it. Never use as the primary discovery tool — the MCP authors explicitly warn that blind searching misses connective data.
      - Then single-item `batch_fetch` calls for each page identified. Fire fetches in parallel. **The fetch is required because Section 2 of Turn 2a is populated from the `sources[]` arrays returned by these fetches.**
    - **Personal context library (Section 2):** after wiki pages are fetched, consolidate their `sources[]` arrays. Triage each source for task relevance. The task-relevant ones appear as flat bullets in Section 2 of Turn 2a. A document that's also in the Cowork folder (Section 3) appears in BOTH sections — duplication is signal, not noise.
-   - **Claude memory** (every session): read any memory files the runtime loaded (`CLAUDE.md`, user memory). Look for customer preferences, project conventions, recurring constraints.
+   - **The assistant's memory** (every session): read any memory files the runtime loaded (`CLAUDE.md`, user memory). Look for customer preferences, project conventions, recurring constraints.
    - **Local project files** (co-work mode only): see the "Local folder enumeration" subsection below for the exact procedure. The brand voice file, current one-pager, and other root-level artifacts are easy to miss when starting from subdirectories.
    - **Session state:** don't re-read files already in context from earlier in the turn or session.
 

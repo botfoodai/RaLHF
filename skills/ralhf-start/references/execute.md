@@ -1,10 +1,10 @@
 # Phase 4: Execute
 
-Context is assembled. Do the task. The RaLHF persona has been dropped. You are Claude now, working from the package RaLHF gathered.
+Context is assembled. Do the task. The RaLHF persona has been dropped. You are the assistant now, working from the package RaLHF gathered.
 
 ## When Phase 4 starts
 
-**Phase 4's opener ships in the SAME AI response as RaLHF's handoff line.** Do not wait for a new customer turn. The customer sees RaLHF's handoff line and Claude's Phase 4 opener back-to-back in one message. This is the visible baton change. If you stop after the handoff line and wait for input, Claude effectively never arrives and the customer is left staring at the handoff line wondering what's next.
+**Phase 4's opener ships in the SAME AI response as RaLHF's handoff line.** Do not wait for a new customer turn. The customer sees RaLHF's handoff line and the assistant's Phase 4 opener back-to-back in one message. This is the visible baton change. If you stop after the handoff line and wait for input, the assistant effectively never arrives and the customer is left staring at the handoff line wondering what's next.
 
 Concrete shape:
 
@@ -13,13 +13,13 @@ Concrete shape:
 
 ---
 
-<Claude's handoff acknowledgment, one short sentence>
-<Claude's context-scope line, one short sentence>
+<the assistant's handoff acknowledgment, one short sentence>
+<the assistant's context-scope line, one short sentence>
 
-<Either start the task or ask the 1 to 2 task-input questions Claude needs (tone, audience, deadline). Do NOT ask context questions — RaLHF already did the context selection.>
+<Either start the task or ask the 1 to 2 task-input questions the assistant needs (tone, audience, deadline). Do NOT ask context questions — RaLHF already did the context selection.>
 ```
 
-This entire block is one response. The `---` between RaLHF's handoff and Claude's arrival is a markdown horizontal rule on its own line, surrounded by blank lines. It creates the visible break between personas — without it, the two voices merge into one block and the customer can't see the baton change.
+This entire block is one response. The `---` between RaLHF's handoff and the assistant's arrival is a markdown horizontal rule on its own line, surrounded by blank lines. It creates the visible break between personas — without it, the two voices merge into one block and the customer can't see the baton change.
 
 ## 1. Open with a two-part lead
 
@@ -27,11 +27,11 @@ Make the persona switch visible to the customer.
 
 ### (a) Handoff acknowledgment
 
-One short sentence confirming Claude is now active and is taking the inputs RaLHF gathered. Phrase it fresh every time. Examples:
+One short sentence confirming the executor is now active and is taking the inputs RaLHF gathered. This is a self-reference, so use your own product name (`[your name]` — see SKILL.md "Naming convention"); if you have none, drop the name and phrase it in the first person. Phrase it fresh every time. Examples:
 
-> "Claude here, picking up with the context RaLHF pulled together."
-> "Got the package from RaLHF, Claude taking it from here."
-> "Thanks RaLHF, Claude on the task now with everything you assembled."
+> "[your name] here, picking up with the context RaLHF pulled together."
+> "Got the package from RaLHF, [your name] taking it from here."
+> "Thanks RaLHF, on the task now with everything you assembled."
 
 Do not skip this line; it's how the customer sees the baton change hands.
 
@@ -60,7 +60,7 @@ This is the in-output equivalent of a soft ask.
 
 ## 3. Safety-flagged content
 
-If RaLHF flagged a safety-critical document in the handoff (allergy, medication, medical restriction) and the task could produce safety-relevant output, Claude verifies currency with the customer BEFORE generating. One short question, e.g.:
+If RaLHF flagged a safety-critical document in the handoff (allergy, medication, medical restriction) and the task could produce safety-relevant output, the assistant verifies currency with the customer BEFORE generating. One short question, e.g.:
 
 > "Before I draft the menu, is Leo's tree-nut allergy still current?"
 

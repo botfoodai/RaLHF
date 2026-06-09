@@ -1,10 +1,10 @@
 # Phase 0 silent work
 
-After the greeting (and never narrated to the customer), run these calls in sequence.
+After the customer says "pull" on the ask-first gate (and never narrated to the customer), run these calls in sequence. There is no separate greeting turn — identity was carried by the gate message.
 
-**Phase 0a already fired `get_my_mcp_usage`** before the greeting (it gates the Small-task opt-in and informs greeting length). Its `usage_count` is in hand. Phase 0 silent work covers the remaining calls.
+**Phase 0a already fired `get_my_mcp_usage`** before the gate (it scales the gate's identity tier and drives the new-user pull-lean). Its `usage_count` is in hand. Phase 0 silent work covers the remaining calls.
 
-**Light-flow exception:** if Phase 0a routed to the opt-in AND the customer said "yes" (Small + veteran branch), skip Step 2 (`get_wiki_catalog`). Only Step 1 (`get_instructions`) runs. See `references/task-triage.md`.
+**Light-flow exception:** if the customer said "pull" on a self-contained task (one RaLHF recommended skipping), skip Step 2 (`get_wiki_catalog`). Only Step 1 (`get_instructions`) runs. See `references/task-triage.md`.
 
 ## Step 1: Call `get_instructions`
 
@@ -30,9 +30,9 @@ It is not a list of narrow filter rules. It is an evolving operating manual that
 
 ### Scoping personalized rules
 
-Some personalized rules apply to RaLHF's context selection (what to fetch, which sources to trust). Some apply to Claude's drafting (tone, structure, briefing requirements).
+Some personalized rules apply to RaLHF's context selection (what to fetch, which sources to trust). Some apply to the assistant's drafting (tone, structure, briefing requirements).
 
-Rules that demand task-input clarifications ("never propose structure until a briefing is shared", "always ask the audience first") apply to Claude's drafting in Phase 4. They do not apply to RaLHF's context selection in Phase 2. RaLHF presents the inventory and runs the amendment ask. RaLHF does not pause to ask the customer task questions, even when a personalized rule sounds like it wants RaLHF to.
+Rules that demand task-input clarifications ("never propose structure until a briefing is shared", "always ask the audience first") apply to the assistant's drafting in Phase 4. They do not apply to RaLHF's context selection in Phase 2. RaLHF presents the inventory and runs the amendment ask. RaLHF does not pause to ask the customer task questions, even when a personalized rule sounds like it wants RaLHF to.
 
 ## Step 2: Call `get_wiki_catalog`
 
@@ -40,7 +40,7 @@ Returns wiki orientation — narrative summary, total page count, per-type count
 
 ### What the catalog IS good for
 
-- The **narrative summary** (one paragraph describing what the wiki contains overall) — used in the greeting and Phase 0a triage.
+- The **narrative summary** (one paragraph describing what the wiki contains overall) — useful for orienting Phase 1 discovery once "pull" is given. (Note: the catalog is NOT fetched before the ask-first gate; this is post-pull.)
 - The **stats** (`total_pages`, `by_type` counts, `top_tags`, `top_namespaces`, `last_page_updated_at`) — these are exhaustive and accurate.
 - The **top ~5 pages per type** — useful as a "what does this user have a lot of?" signal and a starting set of candidate page IDs.
 
@@ -65,4 +65,4 @@ If the block is empty, fall back to generic behavior and move on.
 
 ## When both calls return, proceed to Phase 1
 
-No second greeting.
+No greeting here — identity was already carried by the ask-first gate. Go straight into discovery.

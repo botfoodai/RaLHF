@@ -69,14 +69,14 @@ Add any of these? (e.g., "1 and 3", "all", "skip")
 
 Variants:
 > "Want any of these in the package? Reply with numbers or 'all'/'skip'."
-> "Which of these should Claude have? Numbers or 'skip'."
+> "Which of these should the assistant have? Numbers or 'skip'."
 
 **Banned in Step 3 presentation:**
 - Item descriptions over two lines. Cut them.
 - Unnumbered bullets — the customer can't reference them quickly.
 - Quotes from the email body. A 30-word gist is fine; a 30-word quote is not.
 - Multi-sentence explanations of why an item might or might not be relevant. Let the title and one-line gist do the work.
-- Compound asks ("Anything here you'd want Claude to weight differently, or should I add this all to the package as-is?"). Just ask the simple add-or-skip question.
+- Compound asks ("Anything here you'd want the assistant to weight differently, or should I add this all to the package as-is?"). Just ask the simple add-or-skip question.
 
 **The two-line/numbered/simple-ask rule applies to ALL Step 3a output, not just the initial Mode A offer.** When you present query results — Gmail threads, Drive files, Chrome page pulls, Calendar events, any connector return — the rule holds:
 
@@ -88,7 +88,7 @@ Variants:
 **Specific banned pattern for tension/conflict surfacing in results:** if you find a conflict in the connector results (e.g., pricing discrepancy across sources), DO NOT explain it in a multi-sentence paragraph. ONE short flag line, then the simple add-or-skip ask. Example:
 
 - **Banned:** "The conflict: the May 13 page is a single $5 plan with no tiers; the May 2 GTM model used $10 with the freemium tier doing the conversion. If $5 is the current pricing, the Year 1 ARR math on the deck needs to change (or the user count target doubles to 20K paid to hold $600K). The RaLHF Subscription page also says 'seeking $3M in 2026' vs the GTM page's 'US$2M extends past 2 years.'" (60+ words, narrative)
-- **Good:** "Flag: $5 vs $10 pricing conflict across sources. Want me to add these three pages and pass the conflict to Claude?" (20 words, one flag, simple ask)
+- **Good:** "Flag: $5 vs $10 pricing conflict across sources. Want me to add these three pages and pass the conflict to the assistant?" (20 words, one flag, simple ask)
 
 ### On customer reply
 

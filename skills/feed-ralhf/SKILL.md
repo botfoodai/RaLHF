@@ -10,7 +10,7 @@ The user wants to hand the full session back to RaLHF: a dense conversation summ
 ## Two ways to invoke
 
 1. **User types `/feed-ralhf`** — the original power-user path.
-2. **Phase 5 post-task auto-prompt** — Claude asks *"want me to feed this back to RaLHF? (yes/no)"* after delivering the task output. On "yes", run this same procedure inline without requiring the user to type the slash command. On "no", skip — but `save_context_feedback` (Step 3 only) still runs via the Stop hook.
+2. **Phase 5 post-task auto-prompt** — the assistant asks *"want me to feed this back to RaLHF? (yes/no)"* after delivering the task output. On "yes", run Steps 1–2 (summary + file uploads) inline without requiring the slash command. Step 3 (the postmortem) normally does NOT re-run here, because it already fired silently at handoff (Step 3d of the main flow) — see the Step 3 conditional below. On "no", skip the summary and uploads.
 
 Either path executes the same three steps below.
 
@@ -73,9 +73,13 @@ For each shared file:
 
 If no files were shared this session, skip this step entirely.
 
-## Step 3 — Submit the structured postmortem
+## Step 3 — Submit the structured postmortem (only if it didn't already fire at handoff)
 
-Call `save_context_feedback` with an honest `quality_assessment` on how context assembly went this session. Grade only the signal you actually have — use `"N/A"` for phases that didn't run, and leave array fields empty (`[]`) rather than inventing entries.
+**Conditional — one postmortem per session.** In the normal flow the context-gathering postmortem already fired silently at **handoff (Step 3d)**. If that happened this session, **SKIP this step** — do not call `save_context_feedback` again. Only fire it here when there was NO handoff postmortem, i.e.:
+- RaLHF was skipped this session (the user declined the ask-first gate, or the skill never ran — see Step 4), OR
+- This is a standalone `/feed-ralhf` invocation in a session where the main flow never reached handoff.
+
+When it does fire, call `save_context_feedback` with an honest `quality_assessment` on how context assembly went this session. Grade only the signal you actually have — use `"N/A"` for phases that didn't run, and leave array fields empty (`[]`) rather than inventing entries.
 
 ```
 save_context_feedback(quality_assessment={
@@ -95,7 +99,7 @@ save_context_feedback(quality_assessment={
   "source_counters": {
     "wiki": <int>,            # wiki pages + source docs fetched (personal or shared)
     "cowork_local": <int>,    # local project files (co-work mode)
-    "claude_memory": <int>,   # Claude memory files
+    "claude_memory": <int>,   # the assistant's memory files
     "user_provided": <int>,   # facts the user typed in-chat
     "external": <int>,        # Gmail/Calendar/Jira/web
     "prior_session": <int>    # carried over from session memory

@@ -2,7 +2,7 @@
 
 **Turn 2b is OPTIONAL.** Fires only when RaLHF has a specific proactive flag worth surfacing — a document type the customer clearly has (per catalog evidence) but isn't in the package. When there's nothing specific to flag, SKIP Turn 2b entirely and go straight to Step 3a after the customer responds to Turn 2a.
 
-**Light-flow exception:** if Phase 0a routed to the opt-in AND the customer said "yes" (Small + veteran branch), **Turn 2b never fires.** The light flow uses a single combined Turn 2a / Step 3b check-in and proceeds straight to handoff. See `references/task-triage.md`.
+**Light-flow exception:** if the customer said "pull" on a self-contained task (one RaLHF recommended skipping), **Turn 2b never fires.** The light flow uses a single combined Turn 2a / Step 3b check-in and proceeds straight to handoff. See `references/task-triage.md`.
 
 Turn 2a's closing already asked the amendment question ("Does this look right? Anything to add or remove?"). Turn 2b does NOT re-ask it. Turn 2b is just the flag.
 
@@ -54,7 +54,7 @@ Lead with the flag. End with a one-question ask the customer can answer in three
 - **Re-asking "anything missing / anything to drop."** Turn 2a's closing already asked this. Asking again is the redundancy we just removed.
 - **Preamble.** "Quick check on the documents." "Two things before we move on." Drop it. Lead with the flag.
 - **Re-listing the inventory or restating section headers.** The customer just saw it.
-- **Task-input parameters.** Slide count, deck length, audience, tone, format, deadline, register, recipient name. Those belong to Claude in Phase 4 if Claude can't infer them.
+- **Task-input parameters.** Slide count, deck length, audience, tone, format, deadline, register, recipient name. Those belong to the assistant in Phase 4 if the assistant can't infer them.
 - **Personal-detail probes.** Feelings, motivations, mental state, relationship dynamics, beliefs, things that live only in the customer's head. RaLHF deals in documents and stored data.
 - **Connector-fillable items.** The connector check is Step 3a, the next step. Don't pre-empt it.
 - **Invented document types.** If the catalog gives no evidence the customer has a brand guide, do not flag a missing brand guide.
@@ -68,4 +68,4 @@ Lead with the flag. End with a one-question ask the customer can answer in three
 | Names a document | Fetch it (run the appropriate fetch or connector search), confirm what was found, advance to Step 3a. |
 | "I don't have one / use what you've got / skip" | Acknowledge briefly, advance to Step 3a. |
 | Names a connector ("oh, also check Slack") | Run that connector check now as part of Step 3a, present results briefly. |
-| Volunteers a non-document detail | Acknowledge and pass through to Claude as Phase 4 context, do not save as a `remember` entry unless the customer clearly intends it as durable. |
+| Volunteers a non-document detail | Acknowledge and pass through to the assistant as Phase 4 context, do not save as a `remember` entry unless the customer clearly intends it as durable. |
