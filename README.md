@@ -56,6 +56,31 @@ This dev variant points at `backend.ralfh-dev.com/mcp`. Install via the internal
 
 For the production variant (points at `backend.ralhf.ai/mcp`), see `plugins/ralhf/` or install from [`botfoodai/RaLHF`](https://github.com/botfoodai/RaLHF).
 
+### Claude Code
+
+Build the distributable zip, unzip it, then install the extracted plugin folder:
+
+```bash
+./build-plugin.sh
+unzip dist/ralhf-3.10.1.zip
+/plugin install ./ralhf
+```
+
+### Codex
+
+This repo also includes `.codex-plugin/plugin.json`, so Codex can load the same `skills/` directory and `.mcp.json` server definition.
+
+For local development, this repo includes a tiny marketplace wrapper at `codex-marketplace/`. Register it, then install `ralhf` from that local marketplace:
+
+```bash
+codex plugin marketplace add ./codex-marketplace
+codex plugin add ralhf@ralhf-local
+```
+
+The marketplace wrapper points `./plugins/ralhf` back to this repo. After installing or updating the plugin, start a new Codex thread so the skills and MCP tools are loaded.
+
+Codex loads the root `hooks.json` file through `.codex-plugin/plugin.json` as plugin-bundled lifecycle hooks. On first install or after a hook change, run `/hooks` in Codex and trust the RaLHF hooks when prompted. Once installed, run `/ralhf-intro` to verify the MCP connection. Normal tasks should use `ralhf-start`; if it does not auto-fire, type `/ralhf-start`.
+
 ---
 
 ## Architecture
@@ -64,7 +89,10 @@ For the production variant (points at `backend.ralhf.ai/mcp`), see `plugins/ralh
 plugins/ralhf/
 ├── .claude-plugin/
 │   └── plugin.json
+├── .codex-plugin/
+│   └── plugin.json
 ├── .mcp.json                       # dev MCP URL
+├── hooks.json                      # Codex plugin-bundled lifecycle hooks
 ├── CLAUDE.md                       # plugin-level rules (skill-first, AskUserQuestion ban)
 ├── PHASES.md                       # orientation map
 ├── README.md                       # this file
@@ -80,6 +108,9 @@ plugins/ralhf/
 │   ├── track-feedback-saved.py
 │   ├── prompt-context-feedback.py
 │   └── cleanup-session.py
+├── codex-marketplace/              # local Codex marketplace wrapper
+│   ├── .agents/plugins/marketplace.json
+│   └── plugins/ralhf -> ../..
 └── skills/
     ├── ralhf-start/                # the main five-phase skill
     │   ├── SKILL.md

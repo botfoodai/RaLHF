@@ -51,7 +51,9 @@ ZIP_PATH="$DIST/$ZIP_NAME"
 # --- verify required files are present ---------------------------------------
 REQUIRED=(
   ".claude-plugin/plugin.json"
+  ".codex-plugin/plugin.json"
   ".mcp.json"
+  "hooks.json"
   "skills/ralhf-start/SKILL.md"
   "hooks/hooks.json"
   "LICENSE"
@@ -84,6 +86,7 @@ rsync -a \
   --exclude='.gitignore' \
   --exclude='.DS_Store' \
   --exclude='.claude/' \
+  --exclude='.codex/' \
   --exclude='dist/' \
   --exclude='build/' \
   --exclude='*.zip' \
@@ -100,7 +103,7 @@ rsync -a \
 # Run zip from the staging dir so paths inside the archive are relative
 # to the plugin folder (i.e. "ralhf/.claude-plugin/plugin.json" not
 # "/private/tmp/.../ralhf/.claude-plugin/plugin.json").
-( cd "$STAGING" && zip -rq "$ZIP_PATH" "$PLUGIN_NAME" )
+( cd "$STAGING" && zip -rqy "$ZIP_PATH" "$PLUGIN_NAME" )
 
 # --- report -------------------------------------------------------------------
 SIZE=$(du -h "$ZIP_PATH" | awk '{print $1}')
@@ -115,4 +118,6 @@ echo ""
 echo "To install:"
 echo "  1.  unzip $ZIP_NAME"
 echo "  2.  In Claude Code: /plugin install ./$PLUGIN_NAME"
+echo "  3.  In Codex: codex plugin marketplace add ./$PLUGIN_NAME/codex-marketplace"
+echo "  4.  In Codex: codex plugin add $PLUGIN_NAME@ralhf-local"
 echo ""

@@ -1,0 +1,42 @@
+{
+  "name": "ralhf",
+  "version": "3.10.1+codex.20260610124500",
+  "description": "RaLHF is a context selection assistant that gathers relevant personal, project, and connector context before Codex works on a task.",
+  "author": {
+    "name": "Bot Food Corporation",
+    "url": "https://botfood.ai"
+  },
+  "homepage": "https://ralhf.ai",
+  "repository": "https://github.com/botfoodai/RaLHF",
+  "license": "Apache-2.0",
+  "keywords": [
+    "ralhf",
+    "personalization",
+    "context",
+    "memory",
+    "ai-agent",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks.json",
+  "interface": {
+    "displayName": "RaLHF",
+    "shortDescription": "Gather relevant context before Codex works",
+    "longDescription": "Use RaLHF to assemble task-relevant context from your RaLHF library, local project files, and connected MCP sources before Codex starts substantive work.",
+    "developerName": "Bot Food Corporation",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://ralhf.ai",
+    "defaultPrompt": [
+      "Run /ralhf-intro to verify setup.",
+      "Use /ralhf-start before a task.",
+      "Save a durable fact with /ralhf-learn."
+    ],
+    "brandColor": "#111111"
+  }
+}

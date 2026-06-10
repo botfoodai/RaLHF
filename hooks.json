@@ -1,0 +1,82 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./scripts/print-hook.py ./hooks/ralhf-init.md",
+            "commandWindows": "py -3 .\\scripts\\print-hook.py .\\hooks\\ralhf-init.md",
+            "timeout": 10,
+            "statusMessage": "Loading RaLHF instructions"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./scripts/print-hook.py ./hooks/user-prompt-gate.md",
+            "commandWindows": "py -3 .\\scripts\\print-hook.py .\\hooks\\user-prompt-gate.md",
+            "timeout": 10,
+            "statusMessage": "Checking RaLHF context gate"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "([Aa]sk|[Qq]uestion|[Cc]larif|[Pp]rompt[Uu]ser|request_user_input)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./scripts/print-hook.py ./hooks/pretool-askuser-block.json",
+            "commandWindows": "py -3 .\\scripts\\print-hook.py .\\hooks\\pretool-askuser-block.json",
+            "timeout": 10,
+            "statusMessage": "Checking RaLHF clarification policy"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*__(get_wiki_catalog|browse_wiki|batch_fetch)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./scripts/track-context-tool.py",
+            "commandWindows": "py -3 .\\scripts\\track-context-tool.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*__save_context_feedback",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./scripts/track-feedback-saved.py",
+            "commandWindows": "py -3 .\\scripts\\track-feedback-saved.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./scripts/prompt-context-feedback.py",
+            "commandWindows": "py -3 .\\scripts\\prompt-context-feedback.py",
+            "timeout": 5,
+            "statusMessage": "Checking RaLHF feedback state"
+          }
+        ]
+      }
+    ]
+  }
+}
