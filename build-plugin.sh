@@ -53,7 +53,7 @@ REQUIRED=(
   ".claude-plugin/plugin.json"
   ".codex-plugin/plugin.json"
   ".mcp.json"
-  "hooks.json"
+  "hooks/codex-hooks.json"
   "skills/ralhf-start/SKILL.md"
   "hooks/hooks.json"
   "LICENSE"

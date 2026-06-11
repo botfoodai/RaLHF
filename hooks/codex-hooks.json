@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/print-hook.py ./hooks/ralhf-init.md",
-            "commandWindows": "py -3 .\\scripts\\print-hook.py .\\hooks\\ralhf-init.md",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/print-hook.py ${CLAUDE_PLUGIN_ROOT}/hooks/ralhf-init.md",
+            "commandWindows": "py -3 %CLAUDE_PLUGIN_ROOT%\\scripts\\print-hook.py %CLAUDE_PLUGIN_ROOT%\\hooks\\ralhf-init.md",
             "timeout": 10,
             "statusMessage": "Loading RaLHF instructions"
           }
@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/print-hook.py ./hooks/user-prompt-gate.md",
-            "commandWindows": "py -3 .\\scripts\\print-hook.py .\\hooks\\user-prompt-gate.md",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/print-hook.py ${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-gate.md",
+            "commandWindows": "py -3 %CLAUDE_PLUGIN_ROOT%\\scripts\\print-hook.py %CLAUDE_PLUGIN_ROOT%\\hooks\\user-prompt-gate.md",
             "timeout": 10,
             "statusMessage": "Checking RaLHF context gate"
           }
@@ -33,8 +33,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/print-hook.py ./hooks/pretool-askuser-block.json",
-            "commandWindows": "py -3 .\\scripts\\print-hook.py .\\hooks\\pretool-askuser-block.json",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/print-hook.py ${CLAUDE_PLUGIN_ROOT}/hooks/pretool-askuser-block.json",
+            "commandWindows": "py -3 %CLAUDE_PLUGIN_ROOT%\\scripts\\print-hook.py %CLAUDE_PLUGIN_ROOT%\\hooks\\pretool-askuser-block.json",
             "timeout": 10,
             "statusMessage": "Checking RaLHF clarification policy"
           }
@@ -47,8 +47,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/track-context-tool.py",
-            "commandWindows": "py -3 .\\scripts\\track-context-tool.py",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/track-context-tool.py",
+            "commandWindows": "py -3 %CLAUDE_PLUGIN_ROOT%\\scripts\\track-context-tool.py",
             "timeout": 5
           }
         ]
@@ -58,8 +58,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/track-feedback-saved.py",
-            "commandWindows": "py -3 .\\scripts\\track-feedback-saved.py",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/track-feedback-saved.py",
+            "commandWindows": "py -3 %CLAUDE_PLUGIN_ROOT%\\scripts\\track-feedback-saved.py",
             "timeout": 5
           }
         ]
@@ -70,8 +70,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/prompt-context-feedback.py",
-            "commandWindows": "py -3 .\\scripts\\prompt-context-feedback.py",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/prompt-context-feedback.py",
+            "commandWindows": "py -3 %CLAUDE_PLUGIN_ROOT%\\scripts\\prompt-context-feedback.py",
             "timeout": 5,
             "statusMessage": "Checking RaLHF feedback state"
           }

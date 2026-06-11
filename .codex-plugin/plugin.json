@@ -19,7 +19,7 @@
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
-  "hooks": "./hooks.json",
+  "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "displayName": "RaLHF",
     "shortDescription": "Gather relevant context before Codex works",

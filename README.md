@@ -72,7 +72,7 @@ This repo also includes `.codex-plugin/plugin.json`, so Codex can load the same 
 
 This repository is the plugin source, not the marketplace root. Keep Codex marketplace catalog metadata in `botfoodai/ralhf-codex-marketplace` so the RaLHF plugin package does not vendor marketplace state. Use that marketplace repository for Codex installation instructions. After installing or updating the plugin, start a new Codex thread so the skills and MCP tools are loaded.
 
-Codex loads the root `hooks.json` file through `.codex-plugin/plugin.json` as plugin-bundled lifecycle hooks. On first install or after a hook change, run `/hooks` in Codex and trust the RaLHF hooks when prompted. Once installed, run `/ralhf-intro` to verify the MCP connection. Normal tasks should use `ralhf-start`; if it does not auto-fire, type `/ralhf-start`.
+Codex loads `hooks/codex-hooks.json` through `.codex-plugin/plugin.json` as plugin-bundled lifecycle hooks. The Codex hook config reuses the same scripts and hook prompt files as Claude, but keeps the Codex-specific config shape separate from Claude's `hooks/hooks.json`. On first install or after a hook change, run `/hooks` in Codex and trust the RaLHF hooks when prompted. Once installed, run `/ralhf-intro` to verify the MCP connection. Normal tasks should use `ralhf-start`; if it does not auto-fire, type `/ralhf-start`.
 
 ---
 
@@ -85,13 +85,13 @@ plugins/ralhf/
 ├── .codex-plugin/
 │   └── plugin.json
 ├── .mcp.json                       # dev MCP URL
-├── hooks.json                      # Codex plugin-bundled lifecycle hooks
 ├── CLAUDE.md                       # plugin-level rules (skill-first, AskUserQuestion ban)
 ├── PHASES.md                       # orientation map
 ├── README.md                       # this file
 ├── LICENSE / NOTICE / TRADEMARK.md
 ├── hooks/
-│   ├── hooks.json                  # SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop / SessionEnd
+│   ├── hooks.json                  # Claude lifecycle hooks
+│   ├── codex-hooks.json            # Codex plugin-bundled lifecycle hooks
 │   ├── ralhf-init.md               # SessionStart primer
 │   ├── user-prompt-gate.md         # per-turn skill-invocation gate
 │   └── pretool-askuser-block.json  # AskUserQuestion deny
