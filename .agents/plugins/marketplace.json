@@ -1,7 +1,7 @@
 {
-  "name": "ralhf-local",
+  "name": "ralhf",
   "interface": {
-    "displayName": "RaLHF Local"
+    "displayName": "RaLHF"
   },
   "plugins": [
     {
