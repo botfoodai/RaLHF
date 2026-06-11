@@ -32,6 +32,15 @@
       "Write"
     ],
     "websiteURL": "https://ralhf.ai",
+    "composerIcon": "./assets/ralhf-mark.svg",
+    "logo": "./assets/ralhf-logo.png",
+    "screenshots": [
+      "./assets/codex-plugins-menu.png",
+      "./assets/codex-add-more.png",
+      "./assets/codex-add-marketplace.png",
+      "./assets/codex-select-marketplace.png",
+      "./assets/codex-install-plugin.png"
+    ],
     "defaultPrompt": [
       "Run /ralhf-intro to verify setup.",
       "Use /ralhf-start before a task.",
