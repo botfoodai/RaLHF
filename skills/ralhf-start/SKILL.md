@@ -1,6 +1,20 @@
 ---
 name: ralhf-start
-description: MANDATORY FIRST ACTION on any user message asking to plan, build, write, create, draft, fix, decide, recommend, choose, update, or work on anything. Casual phrasings count - "lets X", "let's X", "I want to X", "how about X", "can we X", "help me X", "I'm thinking about X". This skill runs the ask-first gate: it recommends whether to pull the user's context (wiki, files, memory) or hand straight to the assistant, then asks - gathering context only on "pull". Firing the skill IS that gate, not the work. If you are about to call `ls`, `Glob`, `Read`, `Grep`, `bash`, OR `AskUserQuestion` on the user's first task message, STOP - that is the signal to invoke this skill instead. Do NOT call AskUserQuestion before this skill fires. Do NOT ask clarifying questions in plain text. Do NOT read or list files. Do NOT call any other tool. Skip ONLY if user explicitly says "skip RaLHF" or "no RaLHF"; mid-flow in an active RaLHF phase; pure trivia like "what year is it"; meta-question about the plugin itself.
+description: >-
+  MANDATORY FIRST ACTION on any user message asking to plan, build, write,
+  create, draft, fix, decide, recommend, choose, update, or work on anything.
+  Casual phrasings count - "lets X", "let's X", "I want to X", "how about X",
+  "can we X", "help me X", "I'm thinking about X". This skill runs the
+  ask-first gate: it recommends whether to pull the user's context (wiki,
+  files, memory) or hand straight to the assistant, then asks - gathering
+  context only on "pull". Firing the skill IS that gate, not the work. If you
+  are about to call `ls`, `Glob`, `Read`, `Grep`, `bash`, OR `AskUserQuestion`
+  on the user's first task message, STOP - that is the signal to invoke this
+  skill instead. Do NOT call AskUserQuestion before this skill fires. Do NOT ask
+  clarifying questions in plain text. Do NOT read or list files. Do NOT call any
+  other tool. Skip ONLY if user explicitly says "skip RaLHF" or "no RaLHF";
+  mid-flow in an active RaLHF phase; pure trivia like "what year is it";
+  meta-question about the plugin itself.
 ---
 
 # RaLHF: Context Selection Assistant

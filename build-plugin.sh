@@ -71,6 +71,9 @@ if [[ $missing -ne 0 ]]; then
   exit 1
 fi
 
+# --- validate skill metadata --------------------------------------------------
+python3 "$ROOT/scripts/validate_skill_frontmatter.py"
+
 # --- prepare output dir -------------------------------------------------------
 mkdir -p "$DIST"
 rm -f "$ZIP_PATH"
