@@ -1,0 +1,44 @@
+name: CI
+
+# `main` is the canonical DEV branch (dev RaLHF MCP), so public-release safety is
+# NOT enforced there — `main` legitimately carries dev endpoints. Public-safety
+# validation runs against the generated `prod` branch (the mirror source).
+# Pull requests and `main` get lightweight plugin checks only.
+
+on:
+  pull_request:
+  push:
+    branches: [main, prod]
+  workflow_dispatch:
+
+jobs:
+  # Lightweight checks for the dev branch / PRs: JSON validity + skill frontmatter.
+  # Does not assert production endpoints (main is dev).
+  validate-plugin:
+    if: ${{ github.ref != 'refs/heads/prod' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate skill frontmatter
+        run: python3 scripts/validate_skill_frontmatter.py
+
+      - name: Validate JSON manifests
+        run: |
+          python3 -c "import json; json.load(open('.mcp.json'))"
+          python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+          python3 -c "import json; json.load(open('.codex-plugin/plugin.json'))"
+
+  # Full public-release safety, enforced on the production mirror source (`prod`).
+  validate-public-release-safety:
+    if: ${{ github.ref == 'refs/heads/prod' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout prod
+        uses: actions/checkout@v4
+        with:
+          ref: prod
+
+      - name: Validate public release safety
+        run: python3 scripts/validate_public_release.py

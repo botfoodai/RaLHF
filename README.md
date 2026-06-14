@@ -4,11 +4,11 @@
 
 Built by [Bot Food](https://botfood.ai) on the [RaLHF](https://ralhf.ai) MCP server.
 
-[![Version](https://img.shields.io/badge/version-3.6.5-blue.svg)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-3.10.1-blue.svg)](.claude-plugin/plugin.json)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![MCP](https://img.shields.io/badge/MCP-backend.ralfh--dev.com-orange.svg)](https://backend.ralhf.ai/mcp)
+[![MCP](https://img.shields.io/badge/MCP-backend.ralhf.ai-orange.svg)](https://backend.ralhf.ai/mcp)
 
-> **Dev canonical.** This is the canonical source for the ralhf variant family — `plugins/ralhf/` (prod) is generated from this directory via `scripts/sync-plugin-variants.py`. It points at the dev RaLHF MCP (`backend.ralfh-dev.com`) so iteration here doesn't affect prod customers. **Edit here, sync to prod when ready.**
+> **Production plugin source.** This repository contains the public RaLHF plugin package for Claude and Codex. Public releases point at the production RaLHF MCP endpoint: `https://backend.ralhf.ai/mcp`.
 
 ---
 
@@ -50,11 +50,9 @@ See [`PHASES.md`](./PHASES.md) for the orientation map and [`skills/ralhf-start/
 
 ---
 
-## Installation (dev variant)
+## Installation
 
-This dev variant points at `backend.ralfh-dev.com/mcp`. Install via the internal `botfoodai/claude-plugins` marketplace.
-
-For the production variant (points at `backend.ralhf.ai/mcp`), see `plugins/ralhf/` or install from [`botfoodai/RaLHF`](https://github.com/botfoodai/RaLHF).
+This production plugin points at `https://backend.ralhf.ai/mcp`. Install from the public Claude marketplace or Codex marketplace as documented below.
 
 ### Claude Code
 
@@ -84,7 +82,7 @@ plugins/ralhf/
 │   └── plugin.json
 ├── .codex-plugin/
 │   └── plugin.json
-├── .mcp.json                       # dev MCP URL
+├── .mcp.json                       # production MCP URL
 ├── CLAUDE.md                       # plugin-level rules (skill-first, AskUserQuestion ban)
 ├── PHASES.md                       # orientation map
 ├── README.md                       # this file
