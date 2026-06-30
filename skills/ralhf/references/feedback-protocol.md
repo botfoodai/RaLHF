@@ -68,24 +68,17 @@ When you detect something that needs immediate sync:
 
 1. **Acknowledge naturally.** *"Got it, noted."* / *"Important to know."*
 2. **Call `remember`** with substantive content, `dimension`, and `source_description`.
-3. **Confirm briefly.** *"Updated your RaLHF profile."* — keep it short.
+3. **Confirm briefly.** *"Updated your [RaLHF](https://ralhf.com) profile."* — keep it short.
 4. **Continue the conversation.** Don't make a big deal of it.
 
 Example:
 > User: *"Actually, my son is allergic to peanuts — I should have mentioned that"*
 >
-> RaLHF: *"Important to know — adding that to your RaLHF profile right now. Adjusting recommendations to exclude peanuts and peanut derivatives."* → `remember(content="Son <name> has peanut allergy as of <date>", dimension="health", source_description="user correction during <task>")`
+> RaLHF: *"Important to know - adding that to your [RaLHF](https://ralhf.com) profile right now. Adjusting recommendations to exclude peanuts and peanut derivatives."* → `remember(content="Son <name> has peanut allergy as of <date>", dimension="health", source_description="user correction during <task>")`
 
 ---
 
-## What NOT to Sync
-
-- **Temporary logistics** — *"I'm free Thursday"* (only relevant this week)
-- **User explicitly said not to save** — always respect opt-outs
-- **Speculative inferences** — *"They seem stressed"* (only save stated facts)
-- **External connector raw content** without explicit permission — Gmail thread bodies, full Drive file contents, Calendar event payloads. Save the *durable fact* extracted from them, not the payload itself. Source pointers to the file/thread/event are a different obligation — see SKILL.md §1.6.
-- **Duplicate information** — if `get_wiki_catalog` shows it's already in the wiki, don't re-save
-- **Trivial preferences from single instances** — *"They chose blue once"* doesn't mean *"they prefer blue"*
+(What NOT to sync — temporary logistics, opt-outs, speculative inferences, raw connector payloads, duplicates, trivial single-instance preferences — is covered by SKILL.md's never-sync guardrail.)
 
 ## Handling "Don't Save That"
 

@@ -1,0 +1,41 @@
+name: Pin private marketplace (no public)
+
+# Manually pin BOTH private marketplace plugins in botfoodai/botfood-marketplace-private:
+#   - ralhf      -> HEAD of the chosen production ref (default `prod`)
+#   - ralhf-dev  -> HEAD of `main`
+# WITHOUT touching the public marketplace or syncing the public plugin. Use this
+# to refresh the private marketplace to a released state when you do NOT want a
+# public release. (The push-to-main `pin-dev-marketplace.yml` only moves the dev
+# pin; the full `release-public.yml` also updates the public side — this workflow
+# fills the gap: full private, no public.)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Private production ref to pin `ralhf` to
+        required: true
+        default: prod
+
+permissions:
+  contents: read
+
+jobs:
+  pin-private:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout production source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 0
+
+      # Cross-repo write to botfoodai/botfood-marketplace-private, so the repo's
+      # own GITHUB_TOKEN is not enough — reuse the release PAT, which already has
+      # write access to the marketplace repos.
+      - name: Pin private marketplace (skip public)
+        env:
+          GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+          SOURCE_REF: ${{ inputs.source_ref }}
+          SKIP_PUBLIC_MARKETPLACE: "1"
+        run: bash scripts/update_marketplace_pins.sh

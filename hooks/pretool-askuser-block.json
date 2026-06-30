@@ -1,9 +1,0 @@
-{
-  "decision": "block",
-  "reason": "BLOCKED: AskUserQuestion is disabled while the ralhf plugin is active. STOP and invoke the `ralhf:ralhf-start` skill RIGHT NOW if you have not already — the skill handles all clarification as part of its Phase 2 staged check-ins. Do NOT fall back to plain-text clarifying questions. Do NOT try to proceed with the task. Do NOT re-attempt AskUserQuestion. Invoke the skill. If you reached this block because the user's prompt felt casual or exploratory, it is still a task — casual phrasings like 'lets X' / 'I want to X' / 'how about X' ALL require the skill. Only exceptions: user explicitly said 'skip context' / 'no RaLHF' on this turn, or this is a meta-question about the plugin itself.",
-  "hookSpecificOutput": {
-    "hookEventName": "PreToolUse",
-    "permissionDecision": "deny",
-    "permissionDecisionReason": "BLOCKED: AskUserQuestion is disabled while the ralhf plugin is active. STOP and invoke the `ralhf:ralhf-start` skill RIGHT NOW if you have not already — the skill handles all clarification as part of its Phase 2 staged check-ins. Do NOT fall back to plain-text clarifying questions. Do NOT try to proceed with the task. Do NOT re-attempt AskUserQuestion. Invoke the skill. If you reached this block because the user's prompt felt casual or exploratory, it is still a task — casual phrasings like 'lets X' / 'I want to X' / 'how about X' ALL require the skill. Only exceptions: user explicitly said 'skip context' / 'no RaLHF' on this turn, or this is a meta-question about the plugin itself."
-  }
-}

@@ -7,42 +7,16 @@ Companion reference to SKILL.md. Internal thinking only — never present this d
 For any task, walk through these questions in your head before firing tools:
 
 1. **What's the action?** — write, plan, build, decide, debug, draft, recap.
-2. **What domains does this touch?** — work, personal, family, financial, health, technical, relational. (RaLHF dimensions: `food_and_dining`, `health`, `home_and_auto`, `identity`, `money`, `shopping`, `entertainment`, `travel`, `work_and_learning`, `social_and_digital_life`.)
-3. **What do I already have in context?** — the assistant's memory, prior conversation, session state. Don't re-fetch what's already loaded.
-4. **What does RaLHF have?** — based on `get_wiki_catalog`, which `page_type`s and `tags` apply? Which specific wiki pages look directly relevant?
+2. **What domains does this touch?** — work, personal, family, financial, health, technical, relational. Map to the 10 life dimensions listed in SKILL.md Phase 1.
+3. **What do I already have in context?** — the AI's memory, prior conversation, session state. Don't re-fetch what's already loaded.
+4. **What does RaLHF have?** — which `page_type`s and `tags` (the 10 dimensions) apply to this task? Fire `browse_wiki` with those filters to find the directly-relevant pages. (No catalog needed — the filter vocabulary is fixed and known.)
 5. **What's the right batch?** — which 3–5 wiki pages do I `batch_fetch` first? Which `sources[]` do I expect RaLHF to read and surface as relevant Library docs in Turn 2a?
 6. **Any conflicts likely?** — wiki + connector + local file all pointing to the same artifact? Apply Band-1/2/3 conflict resolution from §4.5.
 7. **Which connectors plausibly help?** — match task shape to category (see `connector-patterns.md`), then match category to verified-present servers in this session.
 
-## Tool sequence — canonical pattern
+## Tool sequence
 
-```
-1. get_instructions                                    → personalized rules (READ word-for-word)
-2. get_wiki_catalog                                    → ORIENTATION ONLY (narrative summary,
-                                                          page-type counts, top tags, top-5 per
-                                                          type). Page lists are TRUNCATED — not
-                                                          the discovery surface.
-3. browse_wiki(page_type=…, search_text=…) (parallel)  → primary discovery. Combine page_type +
-   browse_wiki(tag=…, search_text=…)        ×N           tag + search_text for max precision.
-   browse_wiki(page_type=…, offset=N, limit=100)         Paginate for full category sweeps.
-4. search(query="…") (only if needed)                  → narrow-target backstop. Use ONLY for
-                                                          a specific name/phrase that didn't
-                                                          surface via browse_wiki(search_text=…).
-5. batch_fetch([{kind:"wiki", page_id}, ...]) (1 item   → read the relevant wiki pages.
-   per call, fired parallel for N pages)
-6. Triage sources[] from returned pages                → auto-fetch / opt-in / skip per §2.9
-7. batch_fetch([{kind:"document", page_id}, ...])      → pull the auto-fetch document bucket
-   (1 item per call, parallel)
-8. (Turn 2b only, after user approval)                 → connector queries (Gmail/Drive/etc.)
-```
-
-In parallel with steps 3–7: scan the assistant's memory, local project files (co-work mode), and any session state already loaded.
-
-### Why this order
-
-- **Catalog is orientation, not enumeration.** Its page lists are truncated to top-5 per type. A 939-page wiki returns ~21 pages from the catalog. Don't pick exclusively from those — most of the wiki is invisible.
-- **`browse_wiki` with combined filters is the workhorse.** `browse_wiki(page_type="entity", search_text="investor")` is far more precise than either filter alone, and far higher recall than the catalog's top-5 entities. Fire 2–4 parallel calls with different filter combinations.
-- **`search` is the narrow-target backstop, not the primary tool.** The MCP authors explicitly warn that blind search misses connective data the structured browse path surfaces. Use search only when a specific named page or one-off phrase didn't appear via `browse_wiki(search_text=…)`.
+The canonical tool sequence (`get_instructions` → cold `browse_wiki` with combined filters → `search` backstop → `batch_fetch` → `sources[]` triage → connector queries) and the rationale for that order live in `references/discover.md`. Use the worked examples below to turn a specific task into the filter combinations you fire.
 
 ## Worked decomposition examples
 
@@ -134,8 +108,8 @@ Each example shows the internal answer to questions 1–5 above for a specific t
 ## Heuristics to internalize
 
 - **Cost asymmetry:** loading context that turns out irrelevant costs seconds. Missing context that turns out critical costs 2–3 revision cycles. When uncertain, fetch the wiki side; propose the connector side for user approval.
-- **Catalog is orientation, browse_wiki is discovery.** The catalog gives you counts, top tags, and the top-5 pages per type — orientation, not enumeration. Use `browse_wiki(page_type=…, search_text=…)` with combined filters to find task-relevant pages in the long tail (the 90%+ of the wiki that's invisible to the catalog). Fire 2–4 parallel browse calls per task.
+- **browse_wiki is discovery; the catalog is a fallback.** Don't fetch `get_wiki_catalog` up front. Use `browse_wiki(page_type=…, search_text=…)` with combined filters to find task-relevant pages in the long tail. Only if browse_wiki returns empty, fall back to the catalog once (counts, top tags) to orient and re-query. Fire 2–4 parallel browse calls per task.
 - **Do not `batch_fetch` random pages by guessing IDs.** Always derive IDs from `browse_wiki` / `search` / `related_pages[]` / `sources[]` first.
 - **Sources are the discovery, not the wiki page.** A wiki page with `source_count: 140` has 140 documents that back it. The page is a pointer; the `sources[]` are where the substance lives. Document triage (§2.9) is non-negotiable.
-- **Empty shortlists are a real result.** If the catalog scan returns nothing for a tag/type, record it as `Wiki [Y]` with zero hits — not as `N`. Tells you to lean harder on connectors (Turn 2b) or `/ralhf-learn` invitations (Step 3a).
+- **Empty shortlists are a real result.** If the `browse_wiki` sweep (and the catalog fallback) returns nothing for a tag/type, record it as `Wiki [Y]` with zero hits — not as `N`. Tells you to lean harder on connectors (Turn 2b) or `/ralhf-learn` invitations (Step 3a).
 - **Co-work mode means dual-source.** Both Wiki AND Local must be scanned in parallel. The repo's own `CLAUDE.md` has authoritative weight equal to `personalized` rules for project conventions.

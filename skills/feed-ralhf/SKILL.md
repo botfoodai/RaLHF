@@ -9,10 +9,10 @@ The user wants to hand the full session back to RaLHF: a dense conversation summ
 
 ## Two ways to invoke
 
-1. **User types `/feed-ralhf`** — the original power-user path.
-2. **Phase 5 post-task auto-prompt** — the assistant asks *"want me to feed this back to RaLHF? (yes/no)"* after delivering the task output. On "yes", run Steps 1–2 (summary + file uploads) inline without requiring the slash command. Step 3 (the postmortem) normally does NOT re-run here, because it already fired silently at handoff (Step 3d of the main flow) — see the Step 3 conditional below. On "no", skip the summary and uploads.
+1. **User types `/feed-ralhf`** — the original power-user path. **Headless: saves directly, no review step** — its explicit "just save it, don't make me review" identity.
+2. **Phase 5 post-task auto-prompt** — the AI asks *"want me to feed this back to [RaLHF](https://ralhf.com)? (yes/no)"* after delivering the task output. On "yes", this is the interactive path: use Steps 1–2 to GATHER the candidates (summary + any session files), then present them as a short text list of proposed saves and save the confirmed set (governed by `ralhf` Phase 5 / `references/remember.md`). Step 3 (the postmortem) does NOT re-run here — it already fired at handoff (Step 3d) — see the Step 3 conditional below. On "no", skip.
 
-Either path executes the same three steps below.
+So: **typed `/feed-ralhf` stays headless; the Phase-5 auto-prompt "yes" presents a confirm list before saving.** The three steps below describe what to gather/save.
 
 ## Meta-command note
 
@@ -34,7 +34,7 @@ For each chunk, call:
 ```
 remember(
   content="<dense factual note — include date context, be specific, no filler>",
-  dimension="<optional Ralhf life-area enum: food_and_dining | health | home_and_auto | identity | money | shopping | entertainment | travel | work_and_learning | social_and_digital_life>",
+  dimension="<optional RaLHF life-area enum: food_and_dining | health | home_and_auto | identity | money | shopping | entertainment | travel | work_and_learning | social_and_digital_life>",
   source_description="conversation summary — /feed-ralhf <YYYY-MM-DD>"
 )
 ```
@@ -76,7 +76,7 @@ If no files were shared this session, skip this step entirely.
 ## Step 3 — Submit the structured postmortem (only if it didn't already fire at handoff)
 
 **Conditional — one postmortem per session.** In the normal flow the context-gathering postmortem already fired silently at **handoff (Step 3d)**. If that happened this session, **SKIP this step** — do not call `save_context_feedback` again. Only fire it here when there was NO handoff postmortem, i.e.:
-- RaLHF was skipped this session (the user declined the ask-first gate, or the skill never ran — see Step 4), OR
+- RaLHF was never invoked this session (the skill didn't run — see Step 4), OR
 - This is a standalone `/feed-ralhf` invocation in a session where the main flow never reached handoff.
 
 When it does fire, call `save_context_feedback` with an honest `quality_assessment` on how context assembly went this session. Grade only the signal you actually have — use `"N/A"` for phases that didn't run, and leave array fields empty (`[]`) rather than inventing entries.
@@ -90,7 +90,7 @@ save_context_feedback(quality_assessment={
   "overall_usefulness": "high" | "medium" | "low",
   "notes": "<1-3 sentences on library topology, surprises, or anything structural worth recording>",
   "phase_grades": {
-    "phase_0": "A"|"B"|"C"|"D"|"F"|"N/A",  # load (expertise + catalog)
+    "phase_0": "A"|"B"|"C"|"D"|"F"|"N/A",  # load (get_instructions)
     "phase_1": "...",                       # discovery
     "phase_2": "...",                       # propose (Turn 2a/2b staged check-ins)
     "phase_3": "...",                       # confirm (gaps, safety, final pre-handoff, Library refresh)
@@ -99,7 +99,7 @@ save_context_feedback(quality_assessment={
   "source_counters": {
     "wiki": <int>,            # wiki pages + source docs fetched (personal or shared)
     "cowork_local": <int>,    # local project files (co-work mode)
-    "claude_memory": <int>,   # the assistant's memory files
+    "claude_memory": <int>,   # the AI's memory files
     "user_provided": <int>,   # facts the user typed in-chat
     "external": <int>,        # Gmail/Calendar/Jira/web
     "prior_session": <int>    # carried over from session memory
@@ -129,10 +129,10 @@ If the user skipped RaLHF (via "no RaLHF" or the skill didn't run), still execut
 
 After all calls complete, tell the user in plain language what was sent. Keep it short:
 
-> Fed to RaLHF:
-> - Saved 3 summary notes to RaLHF (task outcome, new wine preference, open thread on career decision)
-> - Uploaded 1 file: research-brief.pdf (file_id: <short>)
-> - Submitted postmortem — rated medium, flagged 2 gaps (no recent pricing data, no prior pitch examples)
+> Fed to [RaLHF](https://ralhf.com):
+> - Saved 3 summary notes to [RaLHF](https://ralhf.com) (task outcome, new wine preference, open thread on career decision)
+> - Fed 1 file: research-brief.pdf (file_id: <short>)
+> - Submitted postmortem - rated medium, flagged 2 gaps (no recent pricing data, no prior pitch examples)
 
 If something failed (upload rejected, remember errored), list what failed and what still got through. Don't retry in a loop.
 

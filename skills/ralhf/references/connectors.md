@@ -1,32 +1,16 @@
 # Step 3a: Connectors
 
-After the customer has amended the document list (Turn 2b), RaLHF inventories which verified-present connectors are in the session, decides which to offer (or whether to ask open-endedly), and runs the connector flow.
+> **Step 3a is permission-to-QUERY only.** Ask whether to query each connector; on yes, query it, briefly name what came back, and **add the findings to the package as `source_type: connector` items**. The findings are then affirmed (with everything else) at the Step 3b pre-handoff check-in — keep the Step 3a presentation short, not a full item-by-item pick.
+
+After Phase 2's silent assembly, RaLHF inventories which verified-present connectors are in the session, decides which to offer (or whether to ask open-endedly), and runs the connector permission flow.
 
 Connector queries are a deliberate customer-in-the-loop stage, not silent background work.
 
 ## Firing rule
 
-Step 3a fires whenever any non-RaLHF connector is verified-present in this session's MCP tool surface. This is not a judgment call about whether connectors plausibly help. The customer is the arbiter, not RaLHF's heuristic.
+SKILL.md Step 3a has the firing rule, the "verified-present" definition (including the `list_connected_sources` warning), and the Mode A/B/C definitions. This file holds the operational detail: the four-step flow, presentation rules, and example asks.
 
-### Definition of "verified-present"
-
-**"Verified-present" means MCP servers available in THIS session's tool surface.** Inventory by scanning the available tools for the pattern `mcp__<server-id>__<tool>`. Group by server-id. Identify which servers are non-RaLHF connectors: Gmail, Drive, Atlassian (Jira/Confluence), QuickBooks, Chrome, Slack, Notion, Common Room, Figma, Calendar, etc. Tools visible in the deferred tool list count as verified-present (they can be loaded via ToolSearch on demand).
-
-**"Verified-present" does NOT mean RaLHF's `list_connected_sources` output.** That tool returns external services the customer's RaLHF wiki tracks for memory ingestion (Netflix viewing history, Airbnb stays, Amazon orders, etc.) — different concept entirely. Do not use `list_connected_sources` to decide whether Step 3a fires. The wrong-tool failure is documented in test sessions where the AI checked `list_connected_sources` (which returned only RaLHF data feeds), saw no task-relevant entries, and skipped Step 3a — even though Gmail, Drive, and Atlassian were all available in the session's MCP tool surface.
-
-### Pre-flight check
-
-Before deciding whether Step 3a fires, name the non-RaLHF MCP servers present in this session's tool surface. If the list is non-empty, Step 3a MUST fire in mode A or B. Skipping Step 3a when MCPs are present is a hard FAIL.
-
-Three modes:
-
-| Mode | Fires when | Shape |
-|---|---|---|
-| **A: Specific connector offer** | RaLHF has high confidence a specific connector adds depth (task shape clearly maps to category, e.g., letter to a recipient + Gmail present) | Concrete offer: "I could check Gmail for prior threads with <recipient>. Want me to?" |
-| **B: Open-ended check** | Connectors are present but task shape doesn't map cleanly to one | "You have <Gmail, Drive, Calendar> connected. Anything you'd like me to check before we hand off?" |
-| **C: Skip Step 3a** | No connectors verified-present in the session at all (rare) | Go straight to the final pre-handoff check-in |
-
-**The failure mode this rule prevents:** RaLHF judges "no connector plausibly helps this task" and skips silently, even though Gmail, Drive, and Calendar were all connected. The customer never gets asked. Always ask. The customer decides.
+**The failure mode the firing rule prevents:** RaLHF judges "no connector plausibly helps this task" and skips silently, even though Gmail, Drive, and Calendar were all connected. The customer never gets asked. Always ask. The customer decides.
 
 If you skip the connector ask, you must be able to answer: "Were zero connectors verified-present in this session?" If the answer is anything other than yes, fire mode B at minimum.
 
@@ -69,14 +53,14 @@ Add any of these? (e.g., "1 and 3", "all", "skip")
 
 Variants:
 > "Want any of these in the package? Reply with numbers or 'all'/'skip'."
-> "Which of these should the assistant have? Numbers or 'skip'."
+> "Which of these should the AI have? Numbers or 'skip'."
 
 **Banned in Step 3 presentation:**
 - Item descriptions over two lines. Cut them.
 - Unnumbered bullets — the customer can't reference them quickly.
 - Quotes from the email body. A 30-word gist is fine; a 30-word quote is not.
 - Multi-sentence explanations of why an item might or might not be relevant. Let the title and one-line gist do the work.
-- Compound asks ("Anything here you'd want the assistant to weight differently, or should I add this all to the package as-is?"). Just ask the simple add-or-skip question.
+- Compound asks ("Anything here you'd want the AI to weight differently, or should I add this all to the package as-is?"). Just ask the simple add-or-skip question.
 
 **The two-line/numbered/simple-ask rule applies to ALL Step 3a output, not just the initial Mode A offer.** When you present query results — Gmail threads, Drive files, Chrome page pulls, Calendar events, any connector return — the rule holds:
 
@@ -88,7 +72,7 @@ Variants:
 **Specific banned pattern for tension/conflict surfacing in results:** if you find a conflict in the connector results (e.g., pricing discrepancy across sources), DO NOT explain it in a multi-sentence paragraph. ONE short flag line, then the simple add-or-skip ask. Example:
 
 - **Banned:** "The conflict: the May 13 page is a single $5 plan with no tiers; the May 2 GTM model used $10 with the freemium tier doing the conversion. If $5 is the current pricing, the Year 1 ARR math on the deck needs to change (or the user count target doubles to 20K paid to hold $600K). The RaLHF Subscription page also says 'seeking $3M in 2026' vs the GTM page's 'US$2M extends past 2 years.'" (60+ words, narrative)
-- **Good:** "Flag: $5 vs $10 pricing conflict across sources. Want me to add these three pages and pass the conflict to the assistant?" (20 words, one flag, simple ask)
+- **Good:** "Flag: $5 vs $10 pricing conflict across sources. Want me to add these three pages and pass the conflict to the AI?" (20 words, one flag, simple ask)
 
 ### On customer reply
 

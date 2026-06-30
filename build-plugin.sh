@@ -54,7 +54,7 @@ REQUIRED=(
   ".codex-plugin/plugin.json"
   ".mcp.json"
   "hooks/codex-hooks.json"
-  "skills/ralhf-start/SKILL.md"
+  "skills/ralhf/SKILL.md"
   "hooks/hooks.json"
   "assets/ralhf-mark.svg"
   "assets/ralhf-logo.png"

@@ -9,7 +9,7 @@ The user wants to sync what was learned during this conversation back to RaLHF.
 
 ## What to do
 
-Follow the Phase 5 (Remember) protocol from the `ralhf-start` skill:
+Follow the Phase 5 (Remember) protocol from the `ralhf` skill:
 
 ### 1. Review the conversation
 
@@ -21,33 +21,23 @@ Scan the full conversation for:
 - **Decisions made** — choices the user made and why
 - **Patterns** — habits or tendencies that emerged
 
-### 2. Present the sync summary
+### 2. Present the proposed saves as a text list
 
-Show the user what you plan to save, grouped clearly:
+Show the user a short grouped text list of what you propose to save so they can keep/drop/edit each item before anything is saved:
+- A **"New facts & preferences"** group — new facts/preferences/corrections (note the `dimension` where it maps).
+- A **"Conversation summary"** group — one summary item.
 
-"Here's what I'd like to save to your RaLHF from our conversation:
-
-**New context:**
-- [item 1]
-- [item 2]
-
-**Already corrected during our chat:**
-- [item — already saved]
-
-**Conversation summary:**
-- [brief description of what we worked on and the outcome]
-
-Want me to save all of this, or would you like to adjust anything?"
+Dedup against the Library first (don't propose items already saved, and don't double-save anything synced live during the chat). Ask the user to confirm or trim the list.
 
 ### 3. Wait for confirmation
 
-Do NOT sync until the user confirms. They may want to remove items or rephrase things.
+Wait for the user's kept/edited set. Do NOT save until they confirm.
 
-### 4. Execute the sync
+### 4. Save the confirmed set
 
-- Call `remember` for each new piece of context (one call per distinct item)
-- Call `remember` for the overall session summary (include a source_description like "conversation summary")
-- Each note should be specific, dated, and factual
+- Save ONLY the confirmed (possibly edited) items, using each one's `content` + `dimension`.
+- `remember` for facts/preferences/summaries; `start_file_upload` for any real shared files.
+- Each note should be specific, dated, and factual.
 
 ### 5. Confirm completion
 

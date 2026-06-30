@@ -13,16 +13,19 @@ Do NOT query non-RaLHF connectors (Gmail, Calendar, Drive, Jira, QuickBooks, etc
 2. **Check the Trigger Signal Matching table** below. Does the task match a pattern that calls for targeted browsing?
 
 3. **In parallel, drill and scan ALL sources:**
-   - **Personal wiki (Section 1):** **the catalog's page lists are TRUNCATED to the top ~5 per type by source-count/recency — they are NOT the discovery surface.** Use `browse_wiki` aggressively with **combined filters** (`page_type` + `tag` + `search_text` together) to reach the long tail. The catalog earns its keep on counts / top tags / namespaces / narrative summary, not on its truncated page lists. Examples:
+   - **Personal wiki (Section 1):** **discovery is `browse_wiki` — `get_wiki_catalog` is NOT fetched up front.** The filter vocabulary is fixed and known (the page types, and the 10 dimensions: `work_and_learning`, `social_and_digital_life`, `money`, `identity`, `health`, `travel`, `entertainment`, `food_and_dining`, `shopping`, `home_and_auto`), so `browse_wiki` queries cold. Use it aggressively with **combined filters** (`page_type` + `tag` + `search_text` together) to reach the long tail. Examples:
      - `browse_wiki(page_type="entity", search_text="<task-keyword>")` — type-scoped keyword filter, much higher precision than a global search.
      - `browse_wiki(tag="<dimension>", search_text="<task-keyword>")` — tag-scoped keyword filter, narrows by life area + topic.
      - `browse_wiki(page_type="<type>", tag="<dimension>", search_text="<keyword>")` — all three combined for max precision.
      - `browse_wiki(page_type="<type>", offset=0, limit=100)` then `offset=100, limit=100` — pagination when you need to scan a full category (318 concepts, 404 summaries, etc.).
      - **Fire 2–4 parallel `browse_wiki` calls** with different filter combinations per task — one per relevant page_type, one per relevant tag, plus combined-filter variants. The cost is one round-trip; the recall improvement is large.
+     - **`browse_wiki` is also the spill-proof path.** Its filtered, paginated (`limit=100`) responses are bounded, so they don't overflow the token cap the way a full `get_wiki_catalog` can on a large wiki. That's a second reason it — not the catalog — is the discovery entry point.
+     - **Catalog fallback — ONLY when `browse_wiki` comes back empty.** If your `browse_wiki` calls surface nothing task-relevant, call `get_wiki_catalog` **once** to orient: its narrative summary, `by_type` counts, and `top_tags`/`top_namespaces` show what the wiki actually holds. Use that to fire a better-targeted `browse_wiki`/`search` round (maybe you filtered on the wrong dimension or keyword). The catalog is a recovery aid for a missed query — never a routine first step, and never ingested whole (it's the biggest spill risk). If the catalog also shows nothing relevant, the wiki has no task match.
+     - **Personal vs. shared origin — label it, don't guess it.** The wiki holds both the customer's **personal** pages and **shared** pages (from shared groups; internally *potlucks*), side by side. `browse_wiki`'s default `scope="all_accessible"` returns them MIXED, with no reliable per-page origin marker — so a shared page would otherwise land in Section 1 under "From your personal wiki" and read as the customer's own. Turn 2a must mark which is which (see `references/turn-2a.md`), so origin has to be **known**. The catalog's `teams[]` overview is the only place each shared group's `team_name` + `potluck_id` are listed, and it's cheap — an overview (one entry per shared group, NOT its pages), so it is **not** the catalog page-list spill risk. So: when the session has shared groups AND the task could draw on shared knowledge (code standards, internal docs, "how do we do X here", a shared project), fetch the catalog once for `teams[]`, then run the `browse_wiki` sweep **scoped** — `scope="personal"` for personal pages, `scope="potluck:<id>"` per relevant shared group — instead of the mixed `all_accessible`. Carry each fetched page's origin (personal, or the shared group's `team_name`) through to Turn 2a. If the session has no shared groups, `all_accessible` is fine and every page is personal (no tag).
      - **`search(...)` is the narrow-target backstop**: use when you know a specific named page or one-off phrase that doesn't fit a page_type/tag (e.g. a person's name, a unique product term) AND your `browse_wiki(search_text=...)` filters didn't surface it. Never use as the primary discovery tool — the MCP authors explicitly warn that blind searching misses connective data.
      - Then single-item `batch_fetch` calls for each page identified. Fire fetches in parallel. **The fetch is required because Section 2 of Turn 2a is populated from the `sources[]` arrays returned by these fetches.**
    - **Personal context library (Section 2):** after wiki pages are fetched, consolidate their `sources[]` arrays. Triage each source for task relevance. The task-relevant ones appear as flat bullets in Section 2 of Turn 2a. A document that's also in the Cowork folder (Section 3) appears in BOTH sections — duplication is signal, not noise.
-   - **The assistant's memory** (every session): read any memory files the runtime loaded (`CLAUDE.md`, user memory). Look for customer preferences, project conventions, recurring constraints.
+   - **The AI's memory** (every session): read any memory files the runtime loaded (`CLAUDE.md`, user memory). Look for customer preferences, project conventions, recurring constraints.
    - **Local project files** (co-work mode only): see the "Local folder enumeration" subsection below for the exact procedure. The brand voice file, current one-pager, and other root-level artifacts are easy to miss when starting from subdirectories.
    - **Session state:** don't re-read files already in context from earlier in the turn or session.
 
@@ -77,17 +80,21 @@ When two sources contradict on the same fact, use the more recent one as the wor
 
 Never surface a conflict just to display diligence. Display necessary diligence.
 
+### Subject ambiguity — confirm the inference, don't silently commit
+
+The three bands above are for contradicting facts about a known subject. Choosing the *subject itself* is different. Inferring it from context is fine (that's the value); the harm is committing deep to an ambiguous guess and presenting it as fact. Ideally Phase 0a Step 1b already confirmed the subject. If it slipped through and discovery only now reveals the under-specified subject had multiple plausible candidates — "plan a birthday party" and the wiki turns up several people with birthdays — **STOP before assembling Turn 2a and confirm your inference**, framed as a correctable assumption (*"Looks like `<person A>`'s - right person, or did you mean `<person B>`?"*). Don't pour the candidate's full profile and every planning detail into a settled-looking package first. The named failure mode: RaLHF found detailed party-planning notes for one family member, deep-dived on them, and presented specifics as fact — never flagging that whose-birthday was a guess. See `references/key-rules.md` §1.11.
+
 ## End of Phase 1: Notice missing documents
 
-Before Phase 2, take a beat and ask one question grounded in the catalog: are there document types the customer clearly has (visible in the catalog or referenced from other pages) that would help this task but aren't yet in the package?
+Before Phase 2, take a beat and ask one question grounded in what discovery surfaced: are there document types the customer clearly has (surfaced by a `browse_wiki` sweep, or referenced from other pages you fetched) that would help this task but aren't yet in the package?
 
 Examples:
-- Catalog shows a "Brand Voice Guidelines" page but it's not in the package, and the task is external-facing copy. Flag.
+- A `browse_wiki` sweep surfaced a "Brand Voice Guidelines" page but it's not in the package, and the task is external-facing copy. Flag.
 - Customer has a wiki page for a recurring deliverable (Q1 board deck) and the current task is the next instance. Flag any prior installment that isn't in the package.
 - A relevant entity page exists but the related source documents weren't fetched. Flag.
 
-This is NOT a list of personal-detail probes. RaLHF doesn't ask about feelings, motivations, relationship dynamics. The question is purely: what documents would help this task that aren't in the package yet, based on what the catalog shows the customer actually has.
+This is NOT a list of personal-detail probes. RaLHF doesn't ask about feelings, motivations, relationship dynamics. The question is purely: what documents would help this task that aren't in the package yet, based on what discovery (`browse_wiki`) surfaced the customer actually has.
 
 If a missing-document candidate maps to a verified-present connector (a Gmail thread, a Drive file), use that to drive the connector check (Step 3a) rather than the amendment ask.
 
-Phase 1 ends when you have: the catalog, the relevant wiki pages and source docs fetched, a mental inventory of MCP connectors present, and a short list of documents you noticed are missing. Phase 2 is the output phase.
+Phase 1 ends when you have: the relevant wiki pages and source docs fetched (via `browse_wiki` → `batch_fetch`), a mental inventory of MCP connectors present, and a short list of documents you noticed are missing. Phase 2 is the output phase.

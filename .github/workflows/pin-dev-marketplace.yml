@@ -1,0 +1,35 @@
+name: Pin dev plugin in marketplace
+
+# On every push to `main` (the canonical DEV branch), bump the `ralhf-dev` plugin
+# pin in the private marketplace (botfoodai/botfood-marketplace-private) to this
+# commit's SHA, so the dev marketplace entry always tracks the latest main.
+#
+# Only the dev pin moves. The prod pin and the public marketplace are updated
+# separately, on an explicit release, by the "Sync to public repository"
+# workflow (release-public.yml). Both paths share scripts/update_marketplace_pins.sh;
+# this one runs it with DEV_PIN_ONLY=1.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pin-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      # Cross-repo write: this pushes a commit to botfoodai/marketplace-private,
+      # so GITHUB_TOKEN (scoped to this repo) is not enough. Reuse the release PAT,
+      # which already has write access to the marketplace repos.
+      - name: Update private marketplace dev pin
+        env:
+          GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+          DEV_PIN_ONLY: "1"
+          PRIVATE_DEV_SHA: ${{ github.sha }}
+        run: bash scripts/update_marketplace_pins.sh

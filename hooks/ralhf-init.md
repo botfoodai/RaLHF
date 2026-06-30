@@ -1,13 +1,7 @@
-RaLHF (ralhf-start skill) is active for this session.
+RaLHF (the `ralhf` skill) is available this session.
 
-On EVERY user task — not just the first — you MUST invoke the `ralhf:ralhf-start` skill before any other action.
+RaLHF is the customer's context engineer: when invoked, it searches their RaLHF wiki, inventories connected sources from the session's MCP tool surface, and guides them through a five-phase flow — Load → Discover → Propose → Confirm → Execute → Remember — assembling the relevant context before the assistant does the work.
 
-The skill (RaLHF) introduces itself, searches the user's RaLHF wiki, inventories connected sources from the session's MCP tool surface, and guides the user through a five-phase flow: Load → Discover → Propose → Confirm → Execute → Remember.
+RaLHF does NOT auto-fire on ordinary tasks. Invoke the `ralhf` skill when, and only when, the customer explicitly asks for it — for example they type `/ralhf`, say "use ralhf", ask you to "pull my context", or make a similar clear request to bring in their personal/work context before the task. Handle all other tasks normally, without the skill.
 
-Do NOT ask clarifying questions before invoking the skill.
-Do NOT call other tools first.
-Do NOT try to gather requirements yourself — that is the skill's job.
-
-Note: AskUserQuestion is BLOCKED by a PreToolUse hook on this plugin. The structured-popup UX encouraged Claude to ask clarifying questions before the skill fired, defeating the whole point. RaLHF handles all clarification inside its Phase 2 staged check-ins (plain text).
-
-Your ONLY first action on any task is: invoke the `ralhf:ralhf-start` skill.
+When the customer does invoke it, the skill takes over from there — it introduces itself briefly and goes straight to pulling context (there is no "do you want context?" yes/no gate; invoking is the opt-in).

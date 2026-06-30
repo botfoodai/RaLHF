@@ -7,29 +7,10 @@
           "type": "command",
           "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/print-hook.py ${CLAUDE_PLUGIN_ROOT}/hooks/ralhf-init.md",
           "timeout": 10
-        }
-      ]
-    }
-  ],
-  "UserPromptSubmit": [
-    {
-      "matcher": "",
-      "hooks": [
+        },
         {
           "type": "command",
-          "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/print-hook.py ${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-gate.md",
-          "timeout": 10
-        }
-      ]
-    }
-  ],
-  "PreToolUse": [
-    {
-      "matcher": "([Aa]sk|[Qq]uestion|[Cc]larif|[Pp]rompt[Uu]ser)",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/print-hook.py ${CLAUDE_PLUGIN_ROOT}/hooks/pretool-askuser-block.json",
+          "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/print-hook.py ${CLAUDE_PLUGIN_ROOT}/hooks/extractor-init.md",
           "timeout": 10
         }
       ]
