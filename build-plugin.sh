@@ -109,6 +109,29 @@ rsync -a \
   --exclude='node_modules/' \
   "$ROOT/" "$TARGET/"
 
+# --- stamp the plugin version into the MCP transport header -------------------
+# Every backend call carries X-RaLHF-Plugin-Version so telemetry can be
+# attributed to the build that made it. Stamping it here from $VERSION (already
+# read from plugin.json) means the header can never drift from the manifest —
+# bumping plugin.json stays the single edit point.
+python3 - "$TARGET/.mcp.json" "$VERSION" <<'PY'
+import json, sys
+
+path, version = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    cfg = json.load(f)
+servers = cfg.get("mcpServers", {})
+if not servers:
+    print(f"error: {path} has no mcpServers to stamp", file=sys.stderr)
+    sys.exit(1)
+for server in servers.values():
+    server.setdefault("headers", {})["X-RaLHF-Plugin-Version"] = version
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+print(f"stamped X-RaLHF-Plugin-Version={version} into {len(servers)} MCP server(s)")
+PY
+
 # --- build the zip ------------------------------------------------------------
 # Run zip from the staging dir so paths inside the archive are relative
 # to the plugin folder (i.e. "ralhf/.claude-plugin/plugin.json" not

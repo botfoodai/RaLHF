@@ -2,7 +2,10 @@
   "mcpServers": {
     "ralhf-mcp": {
       "type": "http",
-      "url": "https://backend.ralhf.ai/mcp"
+      "url": "https://backend.ralhf.ai/mcp",
+      "headers": {
+        "X-RaLHF-Plugin-Version": "3.15.7"
+      }
     }
   }
 }
